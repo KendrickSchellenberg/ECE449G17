@@ -15,13 +15,7 @@ import math
 import numpy as np
 import matplotlib as plt
 
-
-
-
 class ScottDickController(KesslerController):
-    
-    
-        
     def __init__(self):
         self.eval_frames = 0 #What is this?
 
@@ -220,7 +214,7 @@ class ScottDickController(KesslerController):
         #DEBUG
         print(thrust, bullet_t, shooting_theta, turn_rate, fire)
         
-        return thrust, turn_rate, fire
+        return thrust, turn_rate, fire, False
 
     @property
     def name(self) -> str:
