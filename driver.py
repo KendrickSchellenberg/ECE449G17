@@ -41,7 +41,8 @@ game = KesslerGame(settings=game_settings) # Use this to visualize the game scen
 pre = time.perf_counter()
 
 #score, perf_data = game.run(scenario=my_test_scenario, controllers = [TestController(), ScottDickController()])
-score, perf_data = game.run(scenario=g17_test_scenario, controllers = [G17Controller()])
+g17_controller = G17Controller()
+score, perf_data = game.run(scenario=g17_test_scenario, controllers = [g17_controller])
 
 print('Scenario eval time: '+str(time.perf_counter()-pre))
 print(score.stop_reason)
@@ -50,3 +51,12 @@ print('Deaths: ' + str([team.deaths for team in score.teams]))
 print('Accuracy: ' + str([team.accuracy for team in score.teams]))
 print('Mean eval time: ' + str([team.mean_eval_time for team in score.teams]))
 print('Evaluated frames: ' + str([controller.eval_frames for controller in score.final_controllers]))
+
+import matplotlib.pyplot as plt
+
+# Display the distribution of closest distances
+plt.hist(g17_controller.get_closest_distances(), bins=20, edgecolor='black')
+plt.title('Distribution of Closest Asteroid Distances')
+plt.xlabel('Distance')
+plt.ylabel('Frequency')
+plt.show()
