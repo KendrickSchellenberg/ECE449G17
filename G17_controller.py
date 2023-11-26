@@ -8,7 +8,7 @@
 #   detailed discussion of this source code.
 
 from kesslergame import KesslerController # In Eclipse, the name of the library is kesslergame, not src.kesslergame
-from typing import Dict, Tuple
+from typing import Dict, Tuple, List
 from cmath import sqrt
 import skfuzzy as fuzz
 from skfuzzy import control as ctrl
@@ -19,6 +19,8 @@ import matplotlib as plt
 class G17Controller(KesslerController):
     def __init__(self):
         self.eval_frames = 0 #What is this?
+
+        self.closest_distances = []
 
         # self.targeting_control is the targeting rulebase, which is static in this controller.      
         # Declare variables
@@ -49,7 +51,7 @@ class G17Controller(KesslerController):
         #Declare singleton fuzzy sets for the ship_fire consequent; -1 -> don't fire, +1 -> fire; this will be  thresholded
         #   and returned as the boolean 'fire'
         ship_fire['N'] = fuzz.trimf(ship_fire.universe, [-1,-1,0.0])
-        ship_fire['Y'] = fuzz.trimf(ship_fire.universe, [0.0,1,1]) 
+        ship_fire['Y'] = fuzz.trimf(ship_fire.universe, [0.0,1,1])         
                 
         #Declare each fuzzy rule
         rule1 = ctrl.Rule(bullet_time['L'] & theta_delta['NL'], (ship_turn['NL'], ship_fire['N']))
@@ -96,8 +98,59 @@ class G17Controller(KesslerController):
         self.targeting_control.addrule(rule13)
         self.targeting_control.addrule(rule14)
         self.targeting_control.addrule(rule15)
+
+        #################################################################
+        # self.thrust_range = (-480.0, 480.0)  # m/s^2
+        # self.max_speed = 240  # Meters per second
+        # Map size of 1000, so small from 0-200, medium from 200-400, large > 400
+        # Declare fuzzy sets for the ship_thrust consequent; this will be returned
+
+        # Declare variables
+        closest_asteroid_distance = ctrl.Antecedent(np.arange(0, 1000, 1), 'closest_asteroid_distance')
+        ship_speed = ctrl.Antecedent(np.arange(0, 240, 1), 'ship_speed')
+        ship_thrust = ctrl.Consequent(np.arange(-480, 480, 1), 'ship_thrust')
+
+        # distance
+        closest_asteroid_distance['S'] = fuzz.trimf(closest_asteroid_distance.universe,[0,0,200])
+        closest_asteroid_distance['M'] = fuzz.trimf(closest_asteroid_distance.universe, [0,200,400])
+        closest_asteroid_distance['L'] = fuzz.trimf(closest_asteroid_distance.universe, [400,600,1000])
+
+        # speed
+        ship_speed['S'] = fuzz.trimf(ship_speed.universe,[0,0,60])
+        ship_speed['M'] = fuzz.trimf(ship_speed.universe, [30,90,120])
+        ship_speed['L'] = fuzz.trimf(ship_speed.universe, [100,240,240])
+
+        # Declare fuzzy sets for the ship_thrust consequent; this will be returned as ship_thrust.
+        ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,-480,-30])
+        ship_thrust['NS'] = fuzz.trimf(ship_thrust.universe, [-150,-90,0])
+        ship_thrust['Z'] = fuzz.trimf(ship_thrust.universe, [-30,0,30])
+        ship_thrust['PS'] = fuzz.trimf(ship_thrust.universe, [0,90,150])
+        ship_thrust['PL'] = fuzz.trimf(ship_thrust.universe, [30,480,480])
         
-        
+        #Declare each fuzzy rule
+        rule16 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'], (ship_thrust['Z']))
+        rule17 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['M'], (ship_thrust['PS']))
+        rule18 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['S'], (ship_thrust['PL']))
+        rule19 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['L'], (ship_thrust['NL']))
+        rule20 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['M'], (ship_thrust['NS']))
+        rule21 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['S'], (ship_thrust['PS']))
+        rule22 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['L'], (ship_thrust['Z']))
+        rule23 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['M'], (ship_thrust['NS']))
+        rule24 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['S'], (ship_thrust['NL']))
+
+        # Declare the fuzzy controller, add the rules 
+        # This is an instance variable, and thus available for other methods in the same object. See notes.           
+        self.ship_control = ctrl.ControlSystem()
+        self.ship_control.addrule(rule16)
+        self.ship_control.addrule(rule17)
+        self.ship_control.addrule(rule18)
+        self.ship_control.addrule(rule19)
+        self.ship_control.addrule(rule20)
+        self.ship_control.addrule(rule21)
+        self.ship_control.addrule(rule22)
+        self.ship_control.addrule(rule23)
+        self.ship_control.addrule(rule24)
+
 
     def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool]:
         """
@@ -206,16 +259,32 @@ class G17Controller(KesslerController):
             fire = True
         else:
             fire = False
-               
+        
         # And return your three outputs to the game simulation. Controller algorithm complete.
-        thrust = 0.0
+        impetus = ctrl.ControlSystemSimulation(self.ship_control,flush_after_run=1)
+        impetus.input['closest_asteroid_distance'] = closest_asteroid["dist"]
+        impetus.input['ship_speed'] = ship_state["speed"]
+
+        impetus.compute()
+        
+        # Get the defuzzified outputs
+        pre_thrust = impetus.output['ship_thrust']
+        print(closest_asteroid["dist"], ship_state["speed"], pre_thrust)
+        thrust = pre_thrust
+        #thrust = 0.0
         
         self.eval_frames +=1
         
         #DEBUG
         print(thrust, bullet_t, shooting_theta, turn_rate, fire)
+        # Add the closest asteroid distance to the list
+        self.closest_distances.append(closest_asteroid["dist"])
         
         return thrust, turn_rate, fire, False
+    
+    def get_closest_distances(self) -> List[float]:
+        """Returns the list of closest asteroid distances."""
+        return self.closest_distances
 
     @property
     def name(self) -> str:
