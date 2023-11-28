@@ -3,6 +3,7 @@ import numpy as np
 import random
 import test_fuzzy_GA_ctrl as execute_fuzzy_inference # temporary name for now
 import controller_maker as Controller_Maker
+import statistics
 
 from G17_controller import G17Controller
         
@@ -14,8 +15,7 @@ class FuzzyGAController(G17Controller):
     ...
     Methods
     ```````
-    make_fuzzy_controller:
-        creates a fuzzy controller with generated chromosome
+
     fitness:
         Evalautes the fuzzy controller with given chromosome on a test scenario.
         Evaluated based on a criteria.
@@ -26,54 +26,52 @@ class FuzzyGAController(G17Controller):
     test:
         Test the genetic algorithm on the drivers.py
     """
-    
-    def setup_fuzzy_system(self, chromosome):
-        """
-
-        Parameters
-        ``````````
-        chromosome (Gene) : 
-
-        
-        Returns
-        ```````
-        """
-        pass
-
-    
-
 
     def fitness(self, chromosome):
         """
+        This fitness function will create a Controller class instance and that will be tested by the Test class
+        which has the test scenario defined and the Score collected will be used to define the error of the 
+        Genetic Algorithm model.
+
+        Scoring Criteria:
+        Accuracy = 100
+        Death = 0
+        Closest_Distance = square function?
+        Speed_of_completion = we could use like a square root function? - min
         Parameters
         ``````````
         chromosome (Gene) : 
 
         Returns
         ```````
+        error (int) : Total error of the geenrated fuzzy GA controller model.
         """
+        error = 0
         target_control, ship_control = self.setup_fuzzy_system(chromosome) # Could just also be done by Controller_Maker
         controller = Controller_Maker.Controller(target_control, ship_control)
 
-
         test = execute_fuzzy_inference.Test(controller)
-        accuracy = test.accuracy 
-        # or we could just do 
-        score = test.score
-        accuracy = score.teams.accuracy
-        pass
+        score = test.get_score()
+        ctrl = test.get_ctrl()
 
-    # We are going to test on scenario
-    def execute_fuzzy_inference(self, thrust_sim, fire_sim):
-        """
-        Parameters
-        ``````````
-        chromosome (Gene) : 
+        # We are going to do weighted fitness functions. We can adjust the weights to specify how important a that affect of that 
+        # component is on our model
+        closest_distance_weight = 2 
+        accuracy_weight = 10
 
-        Returns
-        ```````
-        """
-        pass
+        # Penalty Weights
+        death_weight = 50
+        completion_speed_weight = 1/2
+        
+        # 450 is I think the max distance?
+        desired_score = 100 * accuracy_weight + 450 * closest_distance_weight
+        
+        penalty = score.deaths * death_weight + score.mean_eval_time * completion_speed_weight
+        actual_score = score.accuracy * accuracy_weight + statistics.mean(ctrl.get_closest_distances()) * closest_distance_weight - penalty
+                        
+        error = abs(desired_score - actual_score)
+        print(error)
+        return error
 
     def gen_chromosome(self):
         """
@@ -88,15 +86,15 @@ class FuzzyGAController(G17Controller):
         variable_value = random.uniform(0, 1)
         return variable_value
 
+    def export_chromosome(self):
+        """
+        Returns the best developed chromosome.
+        """
+        return self.best_chromsome
+
     def run(self):
         """
-        
-        Parameters
-        ``````````
-        chromosome (Gene) : 
-
-        Returns
-        ```````
+        Runs the Genetic Algorithm using easyGA
         """
         ga = EasyGA.GA()
         # ga.gene_impl = self 
@@ -114,6 +112,7 @@ class FuzzyGAController(G17Controller):
         ga.fitness_function_impl = self.fitness
         ga.evolve()
         ga.print_best_chromosome()
+        self.best_chromsome = ga.print_best_chromosome()
         # Now what do i do with the best chromosome?
         #### Reference Kendrick's Lab on Test Dataset Evaluation
 

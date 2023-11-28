@@ -8,11 +8,20 @@ import numpy as np
 import matplotlib as plt
 
 class Controller():
-    target_control = any
-    ship_control = any
+    """
+    This class creates a controller with a given chromosome. This is to be used along with 
+    Test class from test_fuzzy_GA_ctrl.py for the fitness function to help generate the error
+    of our genetic algorithm
+
+    
+    """
+    # target_control = any
+    # ship_control = any
 
     # This will now make the Controller. Will have to think of what is being passed here...
     # How is the fuzzy Setup going to look like?
+    # Will depend on how we are going to define our chromosome and membership functions
+    # I am of leaning towards how Kendrick has defined his FIS in Lab 5
     '''
     def __init__(self, target_control, ship_control):
         self.target_control = target_control

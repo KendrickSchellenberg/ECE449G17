@@ -8,8 +8,8 @@ class Test():
     This functions the same way as drivers.py but without the gui and this is mainly
     for simulating how our model will do and collect data and score from it.
     """
-    self.__score
-    self.__ctrl
+    __score = None 
+    __ctrl = None
     asteroids_hit = 0
     deaths = 0
     accuracy = 0
@@ -47,14 +47,22 @@ class Test():
 
         self.time = score.sim_time
         # self.accuracy = team.accuracy for team in score.teams
-        self.accuracy = score.teams.accuracy
-        self.deaths = score.teams.deaths
-        self.mean_eval_time = score.teams.mean_eval_time
-        self.asteroids_hit = score.teams.asteroids_hit
+        self.accuracy = score.teams[0].accuracy
+        self.deaths = score.teams[0].deaths
+        self.mean_eval_time = score.teams[0].mean_eval_time
+        self.asteroids_hit = score.teams[0].asteroids_hit
         return
 
     def get_ctrl(self):
         return self.__ctrl
     
     def get_score(self):
-        return self.__score
+        return self.__score.teams[0]
+    
+    def print_graph(self):
+        import matplotlib.pyplot as plt
+        plt.hist(self.ctrl.get_closest_distances(), bins=20, edgecolor='black')
+        plt.title('Distribution of Closest Asteroid Distances')
+        plt.xlabel('Distance')
+        plt.ylabel('Frequency')
+        plt.show()

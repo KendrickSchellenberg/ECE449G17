@@ -2,7 +2,7 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 import time
-from src.kesslergame import Scenario, KesslerGame, GraphicsType, TrainerEnvironment
+from src.kesslergame import Scenario, KesslerGame, GraphicsType
 # from test_controller import TestController
 from scott_dick_controller import ScottDickController
 from G17_controller import G17Controller
@@ -36,8 +36,8 @@ game_settings = {'perf_tracker': True,
                 'realtime_multiplier': 1,
                 'graphics_obj': None}
 
-# game = KesslerGame(settings=game_settings) # Use this to visualize the game scenario
-game = TrainerEnvironment(settings=game_settings) # Use this for max-speed, no-graphics simulation
+game = KesslerGame(settings=game_settings) # Use this to visualize the game scenario
+# game = TrainerEnvironment(settings=game_settings) # Use this for max-speed, no-graphics simulation
 pre = time.perf_counter()
 
 #score, perf_data = game.run(scenario=my_test_scenario, controllers = [TestController(), ScottDickController()])
