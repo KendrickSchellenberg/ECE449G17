@@ -1,3 +1,8 @@
+import EasyGA
+import numpy as np
+import random
+import test_fuzzy_GA_ctrl as execute_fuzzy_inference # temporary name for now
+
 from G17_controller import G17Controller
 
 class FuzzyGAController(G17Controller):
@@ -21,7 +26,7 @@ class FuzzyGAController(G17Controller):
         Test the genetic algorithm on the drivers.py
     """
     
-    def make_fuzzy_controller(self, chromosome):
+    def setup_fuzzy_system(self, chromosome):
         """
 
         Parameters
@@ -44,6 +49,13 @@ class FuzzyGAController(G17Controller):
         Returns
         ```````
         """
+        model = self.setup_fuzzy_system(chromosome)
+
+        test = execute_fuzzy_inference(model)
+        accuracy = test.accuracy 
+        # or we could just do 
+        score = test.score
+        accuracy = score.teams.accuracy
         pass
 
     # We are going to test on scenario
@@ -69,8 +81,8 @@ class FuzzyGAController(G17Controller):
         Returns
         ```````
         """
-        
-        pass
+        variable_value = random.uniform(0, 1)
+        return variable_value
 
     def run(self):
         """
@@ -100,3 +112,6 @@ class FuzzyGAController(G17Controller):
         ga.print_best_chromosome()
         # Now what do i do with the best chromosome?
         #### Reference Kendrick's Lab on Test Dataset Evaluation
+
+ctrl = FuzzyGAController()
+ctrl.run()
