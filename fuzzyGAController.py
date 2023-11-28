@@ -2,9 +2,10 @@ import EasyGA
 import numpy as np
 import random
 import test_fuzzy_GA_ctrl as execute_fuzzy_inference # temporary name for now
+import controller_maker as Controller_Maker
 
 from G17_controller import G17Controller
-
+        
 class FuzzyGAController(G17Controller):
     """
     Child of G17Controller. This is only supposed to implement Fuzzy Logic - Genetic Algorithm
@@ -39,9 +40,11 @@ class FuzzyGAController(G17Controller):
         """
         pass
 
+    
+
+
     def fitness(self, chromosome):
         """
-        
         Parameters
         ``````````
         chromosome (Gene) : 
@@ -49,9 +52,11 @@ class FuzzyGAController(G17Controller):
         Returns
         ```````
         """
-        model = self.setup_fuzzy_system(chromosome)
+        target_control, ship_control = self.setup_fuzzy_system(chromosome) # Could just also be done by Controller_Maker
+        controller = Controller_Maker.Controller(target_control, ship_control)
 
-        test = execute_fuzzy_inference(model)
+
+        test = execute_fuzzy_inference.Test(controller)
         accuracy = test.accuracy 
         # or we could just do 
         score = test.score
@@ -61,7 +66,6 @@ class FuzzyGAController(G17Controller):
     # We are going to test on scenario
     def execute_fuzzy_inference(self, thrust_sim, fire_sim):
         """
-        
         Parameters
         ``````````
         chromosome (Gene) : 

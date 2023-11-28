@@ -2,7 +2,14 @@ import time
 from src.kesslergame import Scenario, KesslerGame, GraphicsType, TrainerEnvironment
 
 class Test():
-    ctrl = 0
+    """
+    Plan is that this class is mainly for testing the FuzzyGA model that we have 
+    created with the chromosome parameters that we have randomly generated.
+    This functions the same way as drivers.py but without the gui and this is mainly
+    for simulating how our model will do and collect data and score from it.
+    """
+    self.__score
+    self.__ctrl
     asteroids_hit = 0
     deaths = 0
     accuracy = 0
@@ -10,8 +17,12 @@ class Test():
     distance = 0
     time = 0
 
+    # Has everything we would need
+    score = 0
+
     def __init__(self, ctrl):
         # self.ctrl = ctrl # This is what we are going to test.
+        self.__ctrl = ctrl
         return
 
     def test_scenario(self):
@@ -32,6 +43,8 @@ class Test():
         
         game = TrainerEnvironment(settings=game_settings) # Use this for max-speed, no-graphics simulation
         score, perf_data = game.run(scenario=my_test_scenario, controllers = [self.ctrl])
+        self.__score = score
+
         self.time = score.sim_time
         # self.accuracy = team.accuracy for team in score.teams
         self.accuracy = score.teams.accuracy
@@ -39,3 +52,9 @@ class Test():
         self.mean_eval_time = score.teams.mean_eval_time
         self.asteroids_hit = score.teams.asteroids_hit
         return
+
+    def get_ctrl(self):
+        return self.__ctrl
+    
+    def get_score(self):
+        return self.__score
