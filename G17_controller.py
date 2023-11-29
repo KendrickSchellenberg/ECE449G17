@@ -66,7 +66,7 @@ class G17Controller(KesslerController):
         rule8 = ctrl.Rule(bullet_time['M'] & theta_delta_fire['Z'], (ship_turn['Z'], ship_fire['Y']))    
         rule9 = ctrl.Rule(bullet_time['M'] & theta_delta_fire['PS'], (ship_turn['PS'], ship_fire['Y']))
         rule10 = ctrl.Rule(bullet_time['M'] & theta_delta_fire['PL'], (ship_turn['PL'], ship_fire['N']))
-        
+
         rule11 = ctrl.Rule(bullet_time['S'] & theta_delta_fire['NL'], (ship_turn['NL'], ship_fire['Y']))
         rule12 = ctrl.Rule(bullet_time['S'] & theta_delta_fire['NS'], (ship_turn['NS'], ship_fire['Y']))
         rule13 = ctrl.Rule(bullet_time['S'] & theta_delta_fire['Z'], (ship_turn['Z'], ship_fire['Y']))
@@ -352,49 +352,8 @@ class G17Controller(KesslerController):
             fire = True
         else:
             fire = False
-        
-        # And return your three outputs to the game simulation. Controller algorithm complete.
-        ship_velocity = ship_state["velocity"]
-        
-        facing_threshold = 0.1  # Set your desired threshold
 
-        if abs(shooting_theta) < facing_threshold:
-            # Ship is facing the asteroid
-            ship_facing = True
-            
-        else:
-            # Ship is not facing the asteroid
-            ship_facing = False
-
-        #####
-        # Define threshold values for facing the asteroid
-        small_threshold = 0.1  # Adjust as needed
-        medium_threshold = 0.5  # Adjust as needed
-        large_threshold = 1.0  # Adjust as needed
-
-        # Check the range of asteroid_ship_theta
-        if -small_threshold <= shooting_theta <= small_threshold:
-            print("Facing the asteroid in the small range.")
-        elif -medium_threshold <= shooting_theta <= medium_threshold:
-            print("Facing the asteroid in the medium range.")
-        elif -large_threshold <= shooting_theta <= large_threshold:
-            print("Facing the asteroid in the large range.")
-        else:
-            print("Not facing the asteroid.")
-
-        #####
-
-
-        # Check if the ship is approaching the asteroid
-        ship_approaching =  (
-            (ship_velocity[0] * asteroid_ship_x + ship_velocity[1] * asteroid_ship_y) > 0
-        )
-
-        ship_approaching_and_facing = ship_approaching and ship_facing
-
-        # Store the closest distance in the list
-        self.closest_distances.append(closest_asteroid["dist"])
-
+        # Pass the inputs to the thrust rulebase
         impetus = ctrl.ControlSystemSimulation(self.ship_control,flush_after_run=1)
         impetus.input['closest_asteroid_distance'] = closest_asteroid["dist"]
         impetus.input['theta_delta_turn'] = shooting_theta
@@ -403,17 +362,17 @@ class G17Controller(KesslerController):
         impetus.compute()
         
         # Get the defuzzified outputs
-        pre_thrust = impetus.output['ship_thrust']
-        #print(closest_asteroid["dist"], ship_state["speed"], pre_thrust)
-        thrust = pre_thrust
-        #thrust = 0.0
-        
+        thrust = impetus.output['ship_thrust']
+    
         self.eval_frames +=1
         
         #DEBUG
-        print(thrust, bullet_t, shooting_theta, turn_rate, fire, closest_asteroid["dist"], ship_facing, ship_approaching, ship_approaching_and_facing)
-        # Add the closest asteroid distance to the list
+        print(thrust, bullet_t, shooting_theta, turn_rate, fire, closest_asteroid["dist"])
         
+        # Store the closest distance in the list
+        self.closest_distances.append(closest_asteroid["dist"])
+
+        # And return your three outputs to the game simulation. Controller algorithm complete.
         return thrust, turn_rate, fire, False
     
     def get_closest_distances(self) -> List[float]:
