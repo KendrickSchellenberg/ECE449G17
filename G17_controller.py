@@ -17,7 +17,8 @@ import numpy as np
 import matplotlib as plt
 
 class G17Controller(KesslerController):
-    def __init__(self):
+    def __init__(self, chromosome):
+        print(chromosome)
         self.eval_frames = 0 #What is this?
 
         self.closest_distances = []
