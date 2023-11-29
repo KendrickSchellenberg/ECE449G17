@@ -265,3 +265,6 @@ class Controller():
         self.closest_distances.append(closest_asteroid["dist"])
         
         return thrust, turn_rate, fire, False
+
+    def get_closest_distances(self) -> List[float]:
+        return self.closest_distances

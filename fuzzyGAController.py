@@ -47,8 +47,8 @@ class FuzzyGAController(G17Controller):
         error (int) : Total error of the geenrated fuzzy GA controller model.
         """
         error = 0
-        target_control, ship_control = self.setup_fuzzy_system(chromosome) # Could just also be done by Controller_Maker
-        controller = Controller_Maker.Controller(target_control, ship_control)
+        # target_control, ship_control = self.setup_fuzzy_system(chromosome) # Could just also be done by Controller_Maker
+        controller = Controller_Maker.Controller()
 
         test = execute_fuzzy_inference.Test(controller)
         score = test.get_score()
@@ -70,7 +70,7 @@ class FuzzyGAController(G17Controller):
         actual_score = score.accuracy * accuracy_weight + statistics.mean(ctrl.get_closest_distances()) * closest_distance_weight - penalty
                         
         error = abs(desired_score - actual_score)
-        print(error)
+        print("This is the error", error)
         return error
 
     def gen_chromosome(self):
@@ -97,10 +97,10 @@ class FuzzyGAController(G17Controller):
         Runs the Genetic Algorithm using easyGA
         """
         ga = EasyGA.GA()
-        # ga.gene_impl = self 
-        ga.chromosome_impl = self.gen_chromosome
-        ga.chromosome_length = 6 # Will vary depending on how important the length is.
-        ga.population_size = 100
+        ga.gene_impl = self.gen_chromosome
+        # ga.chromosome_impl = self.gen_chromosome
+        ga.chromosome_length = 1 # Will vary depending on how important the length is.
+        ga.population_size = 5
 
         ### The target fitness type will have to vary because we are looking 
         ## For max accuracy, distance from nearest asteroid

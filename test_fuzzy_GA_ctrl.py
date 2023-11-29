@@ -23,6 +23,7 @@ class Test():
     def __init__(self, ctrl):
         # self.ctrl = ctrl # This is what we are going to test.
         self.__ctrl = ctrl
+        self.test_scenario()
         return
 
     def test_scenario(self):
@@ -42,8 +43,13 @@ class Test():
                 'graphics_obj': None}
         
         game = TrainerEnvironment(settings=game_settings) # Use this for max-speed, no-graphics simulation
-        score, perf_data = game.run(scenario=my_test_scenario, controllers = [self.ctrl])
+        score, perf_data = game.run(scenario=my_test_scenario, controllers = [self.__ctrl])
         self.__score = score
+        # print("This is the score", score)
+        # print("Is there a score[0]?", score[0])
+        # print("Is there a score.teams?", score.teams)
+        # print("Is there a score.teams[0]?", score.teams[0])
+
 
         self.time = score.sim_time
         # self.accuracy = team.accuracy for team in score.teams
