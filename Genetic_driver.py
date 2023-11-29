@@ -65,11 +65,16 @@ class FuzzyGAController():
         # 450 is I think the max distance?
         desired_score = 100 * accuracy_weight + 450 * closest_distance_weight
         
-        penalty = score.deaths * death_weight + score.mean_eval_time * completion_speed_weight
-        actual_score = score.accuracy * accuracy_weight + statistics.mean(ctrl.get_closest_distances()) * closest_distance_weight - penalty
+        penalty = (score.deaths * death_weight) + (score.mean_eval_time * completion_speed_weight)
+
+        accuracy_score = (score.accuracy * accuracy_weight)
+        distance_score = (statistics.mean(ctrl.get_closest_distances()) * closest_distance_weight)
+
+        actual_score = accuracy_score + distance_score - penalty
                         
         error = abs(desired_score - actual_score)
-        print("This is the error", error)
+        print(f"Actual score: {actual_score}, Accuracy: {accuracy_score}, Distance: {distance_score}, Penalty: {penalty}")
+        print(f"Error: {error}, Desired score: {desired_score}")
         return error
 
     def gen_chromosome(self):
