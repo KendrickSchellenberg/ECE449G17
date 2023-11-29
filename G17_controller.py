@@ -21,11 +21,12 @@ class G17Controller(KesslerController):
         self.eval_frames = 0 #What is this?
 
         self.closest_distances = []
+        self.ship_approaching_list = []
 
         # self.targeting_control is the targeting rulebase, which is static in this controller.      
         # Declare variables
         bullet_time = ctrl.Antecedent(np.arange(0,1.0,0.002), 'bullet_time')
-        theta_delta = ctrl.Antecedent(np.arange(-1*math.pi,math.pi,0.1), 'theta_delta') # Radians due to Python
+        theta_delta_fire = ctrl.Antecedent(np.arange(-1*math.pi, math.pi, 0.1), 'theta_delta_fire') # Radians due to Python
         ship_turn = ctrl.Consequent(np.arange(-180,180,1), 'ship_turn') # Degrees due to Kessler
         ship_fire = ctrl.Consequent(np.arange(-1,1,0.1), 'ship_fire')
         
@@ -35,11 +36,11 @@ class G17Controller(KesslerController):
         bullet_time['L'] = fuzz.smf(bullet_time.universe,0.0,0.1)
         
         #Declare fuzzy sets for theta_delta (degrees of turn needed to reach the calculated firing angle)
-        theta_delta['NL'] = fuzz.zmf(theta_delta.universe, -1*math.pi/3,-1*math.pi/6)
-        theta_delta['NS'] = fuzz.trimf(theta_delta.universe, [-1*math.pi/3,-1*math.pi/6,0])
-        theta_delta['Z'] = fuzz.trimf(theta_delta.universe, [-1*math.pi/6,0,math.pi/6])
-        theta_delta['PS'] = fuzz.trimf(theta_delta.universe, [0,math.pi/6,math.pi/3])
-        theta_delta['PL'] = fuzz.smf(theta_delta.universe,math.pi/6,math.pi/3)
+        theta_delta_fire['NL'] = fuzz.zmf(theta_delta_fire.universe, -1*math.pi/3,-1*math.pi/6)
+        theta_delta_fire['NS'] = fuzz.trimf(theta_delta_fire.universe, [-1*math.pi/3,-1*math.pi/6,0])
+        theta_delta_fire['Z'] = fuzz.trimf(theta_delta_fire.universe, [-1*math.pi/6,0,math.pi/6])
+        theta_delta_fire['PS'] = fuzz.trimf(theta_delta_fire.universe, [0,math.pi/6,math.pi/3])
+        theta_delta_fire['PL'] = fuzz.smf(theta_delta_fire.universe,math.pi/6,math.pi/3)
         
         #Declare fuzzy sets for the ship_turn consequent; this will be returned as turn_rate.
         ship_turn['NL'] = fuzz.trimf(ship_turn.universe, [-180,-180,-30])
@@ -54,21 +55,21 @@ class G17Controller(KesslerController):
         ship_fire['Y'] = fuzz.trimf(ship_fire.universe, [0.0,1,1])         
                 
         #Declare each fuzzy rule
-        rule1 = ctrl.Rule(bullet_time['L'] & theta_delta['NL'], (ship_turn['NL'], ship_fire['N']))
-        rule2 = ctrl.Rule(bullet_time['L'] & theta_delta['NS'], (ship_turn['NS'], ship_fire['Y']))
-        rule3 = ctrl.Rule(bullet_time['L'] & theta_delta['Z'], (ship_turn['Z'], ship_fire['Y']))
-        rule4 = ctrl.Rule(bullet_time['L'] & theta_delta['PS'], (ship_turn['PS'], ship_fire['Y']))
-        rule5 = ctrl.Rule(bullet_time['L'] & theta_delta['PL'], (ship_turn['PL'], ship_fire['N']))   
-        rule6 = ctrl.Rule(bullet_time['M'] & theta_delta['NL'], (ship_turn['NL'], ship_fire['N']))
-        rule7 = ctrl.Rule(bullet_time['M'] & theta_delta['NS'], (ship_turn['NS'], ship_fire['Y']))
-        rule8 = ctrl.Rule(bullet_time['M'] & theta_delta['Z'], (ship_turn['Z'], ship_fire['Y']))    
-        rule9 = ctrl.Rule(bullet_time['M'] & theta_delta['PS'], (ship_turn['PS'], ship_fire['Y']))
-        rule10 = ctrl.Rule(bullet_time['M'] & theta_delta['PL'], (ship_turn['PL'], ship_fire['N']))
-        rule11 = ctrl.Rule(bullet_time['S'] & theta_delta['NL'], (ship_turn['NL'], ship_fire['Y']))
-        rule12 = ctrl.Rule(bullet_time['S'] & theta_delta['NS'], (ship_turn['NS'], ship_fire['Y']))
-        rule13 = ctrl.Rule(bullet_time['S'] & theta_delta['Z'], (ship_turn['Z'], ship_fire['Y']))
-        rule14 = ctrl.Rule(bullet_time['S'] & theta_delta['PS'], (ship_turn['PS'], ship_fire['Y']))
-        rule15 = ctrl.Rule(bullet_time['S'] & theta_delta['PL'], (ship_turn['PL'], ship_fire['Y']))
+        rule1 = ctrl.Rule(bullet_time['L'] & theta_delta_fire['NL'], (ship_turn['NL'], ship_fire['N']))
+        rule2 = ctrl.Rule(bullet_time['L'] & theta_delta_fire['NS'], (ship_turn['NS'], ship_fire['Y']))
+        rule3 = ctrl.Rule(bullet_time['L'] & theta_delta_fire['Z'], (ship_turn['Z'], ship_fire['Y']))
+        rule4 = ctrl.Rule(bullet_time['L'] & theta_delta_fire['PS'], (ship_turn['PS'], ship_fire['Y']))
+        rule5 = ctrl.Rule(bullet_time['L'] & theta_delta_fire['PL'], (ship_turn['PL'], ship_fire['N']))   
+        rule6 = ctrl.Rule(bullet_time['M'] & theta_delta_fire['NL'], (ship_turn['NL'], ship_fire['N']))
+        rule7 = ctrl.Rule(bullet_time['M'] & theta_delta_fire['NS'], (ship_turn['NS'], ship_fire['Y']))
+        rule8 = ctrl.Rule(bullet_time['M'] & theta_delta_fire['Z'], (ship_turn['Z'], ship_fire['Y']))    
+        rule9 = ctrl.Rule(bullet_time['M'] & theta_delta_fire['PS'], (ship_turn['PS'], ship_fire['Y']))
+        rule10 = ctrl.Rule(bullet_time['M'] & theta_delta_fire['PL'], (ship_turn['PL'], ship_fire['N']))
+        rule11 = ctrl.Rule(bullet_time['S'] & theta_delta_fire['NL'], (ship_turn['NL'], ship_fire['Y']))
+        rule12 = ctrl.Rule(bullet_time['S'] & theta_delta_fire['NS'], (ship_turn['NS'], ship_fire['Y']))
+        rule13 = ctrl.Rule(bullet_time['S'] & theta_delta_fire['Z'], (ship_turn['Z'], ship_fire['Y']))
+        rule14 = ctrl.Rule(bullet_time['S'] & theta_delta_fire['PS'], (ship_turn['PS'], ship_fire['Y']))
+        rule15 = ctrl.Rule(bullet_time['S'] & theta_delta_fire['PL'], (ship_turn['PL'], ship_fire['Y']))
      
         #DEBUG
         #bullet_time.view()
@@ -108,17 +109,26 @@ class G17Controller(KesslerController):
         # Declare variables
         closest_asteroid_distance = ctrl.Antecedent(np.arange(0, 1000, 1), 'closest_asteroid_distance')
         ship_speed = ctrl.Antecedent(np.arange(0, 240, 1), 'ship_speed')
+        theta_delta_turn = ctrl.Antecedent(np.arange(-1*math.pi, math.pi, 0.1), 'theta_delta_turn')
         ship_thrust = ctrl.Consequent(np.arange(-480, 480, 1), 'ship_thrust')
 
         # distance
-        closest_asteroid_distance['S'] = fuzz.trimf(closest_asteroid_distance.universe,[0,0,200])
-        closest_asteroid_distance['M'] = fuzz.trimf(closest_asteroid_distance.universe, [0,200,400])
-        closest_asteroid_distance['L'] = fuzz.trimf(closest_asteroid_distance.universe, [400,600,1000])
+        closest_asteroid_distance['S'] = fuzz.trimf(closest_asteroid_distance.universe,[0,0,100])
+        closest_asteroid_distance['M'] = fuzz.trimf(closest_asteroid_distance.universe, [0,200,300])
+        closest_asteroid_distance['L'] = fuzz.trimf(closest_asteroid_distance.universe, [200,400,1000])
 
         # speed
-        ship_speed['S'] = fuzz.trimf(ship_speed.universe,[0,0,60])
+        ship_speed['S'] = fuzz.trimf(ship_speed.universe,[0,0,30])
         ship_speed['M'] = fuzz.trimf(ship_speed.universe, [30,90,120])
         ship_speed['L'] = fuzz.trimf(ship_speed.universe, [100,240,240])
+
+        #Declare fuzzy sets for theta_delta (degrees of turn needed to reach the calculated firing angle)
+        theta_delta_turn['NL'] = fuzz.zmf(theta_delta_turn.universe, -1*math.pi/3,-1*math.pi/6)
+        theta_delta_turn['NS'] = fuzz.trimf(theta_delta_turn.universe, [-1*math.pi/3,-1*math.pi/6,0])
+        theta_delta_turn['Z'] = fuzz.trimf(theta_delta_turn.universe, [-1*math.pi/6,0,math.pi/6])
+        theta_delta_turn['PS'] = fuzz.trimf(theta_delta_turn.universe, [0,math.pi/6,math.pi/3])
+        theta_delta_turn['PL'] = fuzz.smf(theta_delta_turn.universe,math.pi/6,math.pi/3)
+        
 
         # Declare fuzzy sets for the ship_thrust consequent; this will be returned as ship_thrust.
         ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,-480,-30])
@@ -128,15 +138,60 @@ class G17Controller(KesslerController):
         ship_thrust['PL'] = fuzz.trimf(ship_thrust.universe, [30,480,480])
         
         #Declare each fuzzy rule
-        rule16 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'], (ship_thrust['Z']))
-        rule17 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['M'], (ship_thrust['PS']))
-        rule18 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['S'], (ship_thrust['PL']))
-        rule19 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['L'], (ship_thrust['NL']))
-        rule20 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['M'], (ship_thrust['NS']))
-        rule21 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['S'], (ship_thrust['PS']))
-        rule22 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['L'], (ship_thrust['Z']))
-        rule23 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['M'], (ship_thrust['NS']))
-        rule24 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['S'], (ship_thrust['NL']))
+        rule16 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['NL'], (ship_thrust['Z']))
+        rule17 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['NS'], (ship_thrust['Z']))
+        rule18 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['Z'], (ship_thrust['Z']))
+        rule19 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['PS'], (ship_thrust['Z']))
+        rule20 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['PL'], (ship_thrust['Z']))
+        
+        rule21 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['M'] & theta_delta_turn['NL'], (ship_thrust['Z']))
+        rule22 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['M'] & theta_delta_turn['NS'], (ship_thrust['PS']))
+        rule23 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['M'] & theta_delta_turn['Z'], (ship_thrust['PS']))
+        rule24 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['M'] & theta_delta_turn['PS'], (ship_thrust['PS']))
+        rule25 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['M'] & theta_delta_turn['PL'], (ship_thrust['Z']))
+
+        rule26 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['S'] & theta_delta_turn['NL'], (ship_thrust['Z']))
+        rule27 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['S'] & theta_delta_turn['NS'], (ship_thrust['PS']))
+        rule28 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['S'] & theta_delta_turn['Z'], (ship_thrust['PL']))
+        rule29 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['S'] & theta_delta_turn['PS'], (ship_thrust['PS']))
+        rule30 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['S'] & theta_delta_turn['PL'], (ship_thrust['Z']))
+
+        rule31 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['L'] & theta_delta_turn['NL'], (ship_thrust['Z']))
+        rule32 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['L'] & theta_delta_turn['NS'], (ship_thrust['Z']))
+        rule33 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['L'] & theta_delta_turn['Z'], (ship_thrust['Z']))
+        rule34 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['L'] & theta_delta_turn['PS'], (ship_thrust['Z']))
+        rule35 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['L'] & theta_delta_turn['PL'], (ship_thrust['Z']))
+        
+        rule36 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['M'] & theta_delta_turn['NL'], (ship_thrust['Z']))
+        rule37 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['M'] & theta_delta_turn['NS'], (ship_thrust['Z']))
+        rule38 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['M'] & theta_delta_turn['Z'], (ship_thrust['PS']))
+        rule39 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['M'] & theta_delta_turn['PS'], (ship_thrust['Z']))
+        rule40 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['M'] & theta_delta_turn['PL'], (ship_thrust['Z']))
+
+        rule41 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['S'] & theta_delta_turn['NL'], (ship_thrust['Z']))
+        rule42 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['S'] & theta_delta_turn['NS'], (ship_thrust['Z']))
+        rule43 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['S'] & theta_delta_turn['Z'], (ship_thrust['PS']))
+        rule44 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['S'] & theta_delta_turn['PS'], (ship_thrust['Z']))
+        rule45 = ctrl.Rule(closest_asteroid_distance['M'] & ship_speed['S'] & theta_delta_turn['PL'], (ship_thrust['Z']))
+
+        rule46 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['L'] & theta_delta_turn['NL'], (ship_thrust['NS']))
+        rule47 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['L'] & theta_delta_turn['NS'], (ship_thrust['NS']))
+        rule48 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['L'] & theta_delta_turn['Z'], (ship_thrust['NL']))
+        rule49 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['L'] & theta_delta_turn['PS'], (ship_thrust['NS']))
+        rule50 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['L'] & theta_delta_turn['PL'], (ship_thrust['NS']))
+        
+        rule51 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['M'] & theta_delta_turn['NL'], (ship_thrust['NS']))
+        rule52 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['M'] & theta_delta_turn['NS'], (ship_thrust['NS']))
+        rule53 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['M'] & theta_delta_turn['Z'], (ship_thrust['NS']))
+        rule54 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['M'] & theta_delta_turn['PS'], (ship_thrust['NS']))
+        rule55 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['M'] & theta_delta_turn['PL'], (ship_thrust['NS']))
+
+        rule56 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['S'] & theta_delta_turn['NL'], (ship_thrust['NS']))
+        rule57 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['S'] & theta_delta_turn['NS'], (ship_thrust['NS']))
+        rule58 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['S'] & theta_delta_turn['Z'], (ship_thrust['NS']))
+        rule59 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['S'] & theta_delta_turn['PS'], (ship_thrust['NS']))
+        rule60 = ctrl.Rule(closest_asteroid_distance['S'] & ship_speed['S'] & theta_delta_turn['PL'], (ship_thrust['NS']))
+        
 
         # Declare the fuzzy controller, add the rules 
         # This is an instance variable, and thus available for other methods in the same object. See notes.           
@@ -150,6 +205,42 @@ class G17Controller(KesslerController):
         self.ship_control.addrule(rule22)
         self.ship_control.addrule(rule23)
         self.ship_control.addrule(rule24)
+        self.ship_control.addrule(rule25)
+        self.ship_control.addrule(rule26)
+        self.ship_control.addrule(rule27)
+        self.ship_control.addrule(rule28)
+        self.ship_control.addrule(rule29)
+        self.ship_control.addrule(rule30)
+        self.ship_control.addrule(rule31)
+        self.ship_control.addrule(rule32)
+        self.ship_control.addrule(rule33)
+        self.ship_control.addrule(rule34)
+        self.ship_control.addrule(rule35)
+        self.ship_control.addrule(rule36)
+        self.ship_control.addrule(rule37)
+        self.ship_control.addrule(rule38)
+        self.ship_control.addrule(rule39)
+        self.ship_control.addrule(rule40)
+        self.ship_control.addrule(rule41)
+        self.ship_control.addrule(rule42)
+        self.ship_control.addrule(rule43)
+        self.ship_control.addrule(rule44)
+        self.ship_control.addrule(rule45)
+        self.ship_control.addrule(rule46)
+        self.ship_control.addrule(rule47)
+        self.ship_control.addrule(rule48)
+        self.ship_control.addrule(rule49)
+        self.ship_control.addrule(rule50)
+        self.ship_control.addrule(rule51)
+        self.ship_control.addrule(rule52)
+        self.ship_control.addrule(rule53)
+        self.ship_control.addrule(rule54)
+        self.ship_control.addrule(rule55)
+        self.ship_control.addrule(rule56)
+        self.ship_control.addrule(rule57)
+        self.ship_control.addrule(rule58)
+        self.ship_control.addrule(rule59)
+        self.ship_control.addrule(rule60)
 
 
     def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool]:
@@ -248,7 +339,7 @@ class G17Controller(KesslerController):
         shooting = ctrl.ControlSystemSimulation(self.targeting_control,flush_after_run=1)
         
         shooting.input['bullet_time'] = bullet_t
-        shooting.input['theta_delta'] = shooting_theta
+        shooting.input['theta_delta_fire'] = shooting_theta
         
         shooting.compute()
         
@@ -261,24 +352,65 @@ class G17Controller(KesslerController):
             fire = False
         
         # And return your three outputs to the game simulation. Controller algorithm complete.
+        ship_velocity = ship_state["velocity"]
+        
+        facing_threshold = 0.1  # Set your desired threshold
+
+        if abs(shooting_theta) < facing_threshold:
+            # Ship is facing the asteroid
+            ship_facing = True
+            
+        else:
+            # Ship is not facing the asteroid
+            ship_facing = False
+
+        #####
+        # Define threshold values for facing the asteroid
+        small_threshold = 0.1  # Adjust as needed
+        medium_threshold = 0.5  # Adjust as needed
+        large_threshold = 1.0  # Adjust as needed
+
+        # Check the range of asteroid_ship_theta
+        if -small_threshold <= shooting_theta <= small_threshold:
+            print("Facing the asteroid in the small range.")
+        elif -medium_threshold <= shooting_theta <= medium_threshold:
+            print("Facing the asteroid in the medium range.")
+        elif -large_threshold <= shooting_theta <= large_threshold:
+            print("Facing the asteroid in the large range.")
+        else:
+            print("Not facing the asteroid.")
+
+        #####
+
+
+        # Check if the ship is approaching the asteroid
+        ship_approaching =  (
+            (ship_velocity[0] * asteroid_ship_x + ship_velocity[1] * asteroid_ship_y) > 0
+        )
+
+        ship_approaching_and_facing = ship_approaching and ship_facing
+
+        # Store the closest distance in the list
+        self.closest_distances.append(closest_asteroid["dist"])
+
         impetus = ctrl.ControlSystemSimulation(self.ship_control,flush_after_run=1)
         impetus.input['closest_asteroid_distance'] = closest_asteroid["dist"]
+        impetus.input['theta_delta_turn'] = shooting_theta
         impetus.input['ship_speed'] = ship_state["speed"]
 
         impetus.compute()
         
         # Get the defuzzified outputs
         pre_thrust = impetus.output['ship_thrust']
-        print(closest_asteroid["dist"], ship_state["speed"], pre_thrust)
+        #print(closest_asteroid["dist"], ship_state["speed"], pre_thrust)
         thrust = pre_thrust
         #thrust = 0.0
         
         self.eval_frames +=1
         
         #DEBUG
-        print(thrust, bullet_t, shooting_theta, turn_rate, fire)
+        print(thrust, bullet_t, shooting_theta, turn_rate, fire, closest_asteroid["dist"], ship_facing, ship_approaching, ship_approaching_and_facing)
         # Add the closest asteroid distance to the list
-        self.closest_distances.append(closest_asteroid["dist"])
         
         return thrust, turn_rate, fire, False
     
