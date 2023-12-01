@@ -19,6 +19,7 @@ import matplotlib as plt
 class G17Controller(KesslerController):
     def __init__(self, chromosome = 10):
         print(chromosome)
+        print(len(chromosome))
         self.eval_frames = 0 #What is this?
 
         self.closest_distances = []
