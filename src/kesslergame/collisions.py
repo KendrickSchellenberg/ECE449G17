@@ -31,6 +31,3 @@ def circle_line_collision(line_A, line_B, center, radius):
     if cen_dist < radius:
         return True
     return False
-
-
-

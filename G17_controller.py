@@ -374,7 +374,7 @@ class G17Controller(KesslerController):
         self.closest_distances.append(closest_asteroid["dist"])
 
         # And return your three outputs to the game simulation. Controller algorithm complete.
-        return thrust, turn_rate, fire, False
+        return thrust, turn_rate, fire
     
     def get_closest_distances(self) -> List[float]:
         """Returns the list of closest asteroid distances."""
