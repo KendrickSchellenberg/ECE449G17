@@ -24,31 +24,74 @@ class G17Controller(KesslerController):
         self.closest_distances = []
         self.ship_approaching_list = []
 
+        chromosome_values = chromosome
+
+        sublists = [chromosome_values[i:i+4] for i in range(0, len(chromosome_values), 4)]
+
+        # Sort the first three elements in each sublist
+        sorted_sublists = [sorted(sublist[:3]) + sublist[3:] for sublist in sublists]
+
+        # Flatten the sorted sublists to get the final sorted list
+        sorted_list = [item for sublist in sorted_sublists for item in sublist]
+
+        # Replace the values in the original chromosome list with the sorted values
+        index = 0
+        for sublist in sorted_sublists:
+            for item in sublist:
+                chromosome[index] = item
+                index += 1
+
+        # Now, chromosome contains sublists of four elements where the first three are sorted
+        # First three values are used to determine ideal vertice for poor, upper poor and lower good bound, and ideal vertice for good. Last value used for ideal vertice for average
+
+        # Separate the first five and last three tip_amount values
+        first_five_values = sorted(chromosome_values[40:45])
+        last_three_values = sorted(chromosome_values[45:])
+
+        # Combine the sorted values
+        sorted_tip_amount_values = first_five_values + last_three_values
+
+        # Replace the values in the original chromosome list with the sorted values
+        index = 40
+        for value in sorted_tip_amount_values:
+            chromosome[index] = value
+            index += 1
+        chromosome_values = chromosome
+        print(f"Post sort: {chromosome_values}")
+
+        cv = chromosome_values
+
         # self.targeting_control is the targeting rulebase, which is static in this controller.      
         # Declare variables
         bullet_time = ctrl.Antecedent(np.arange(0,1.0,0.002), 'bullet_time')
         theta_delta_fire = ctrl.Antecedent(np.arange(-1*math.pi, math.pi, 0.1), 'theta_delta_fire') # Radians due to Python
         ship_turn = ctrl.Consequent(np.arange(-180,180,1), 'ship_turn') # Degrees due to Kessler
-        ship_fire = ctrl.Consequent(np.arange(-1,1,0.1), 'ship_fire')
+        ship_fire = ctrl.Consequent(np.arange(-1,1,0.1), 'ship_fire') 
         
         #Declare fuzzy sets for bullet_time (how long it takes for the bullet to reach the intercept point)
-        bullet_time['S'] = fuzz.trimf(bullet_time.universe,[0,0,0.05])
-        bullet_time['M'] = fuzz.trimf(bullet_time.universe, [0,0.05,0.1])
-        bullet_time['L'] = fuzz.smf(bullet_time.universe,0.0,0.1)
+        bullet_time['S'] = fuzz.trimf(bullet_time.universe, [cv[0]*0.1, cv[1]*0.1])
+        bullet_time['M'] = fuzz.trimf(bullet_time.universe, [cv[2]*0.1,cv[3]*0.1,cv[4]*0.1])
+        bullet_time['L'] = fuzz.smf(bullet_time.universe, cv[5]*0.1,cv[6]*0.1)
         
         #Declare fuzzy sets for theta_delta (degrees of turn needed to reach the calculated firing angle)
-        theta_delta_fire['NL'] = fuzz.zmf(theta_delta_fire.universe, -1*math.pi/3,-1*math.pi/6)
-        theta_delta_fire['NS'] = fuzz.trimf(theta_delta_fire.universe, [-1*math.pi/3,-1*math.pi/6,0])
-        theta_delta_fire['Z'] = fuzz.trimf(theta_delta_fire.universe, [-1*math.pi/6,0,math.pi/6])
-        theta_delta_fire['PS'] = fuzz.trimf(theta_delta_fire.universe, [0,math.pi/6,math.pi/3])
-        theta_delta_fire['PL'] = fuzz.smf(theta_delta_fire.universe,math.pi/6,math.pi/3)
-        
+        # [-1*math.pi, math.pi]
+        # theta_delta_fire['NL'] = fuzz.zmf(theta_delta_fire.universe, cv[0]*-1*math.pi/3, cv[0]*-1*math.pi/6)
+        theta_delta_fire['NL'] = fuzz.zmf(theta_delta_fire.universe, cv[7]*-1*math.pi, cv[8]*-1*math.pi/6)
+
+        theta_delta_fire['NS'] = fuzz.trimf(theta_delta_fire.universe, [cv[9]*-1*math.pi/3, cv[10]*-1*math.pi/3,0])
+        theta_delta_fire['Z'] = fuzz.trimf(theta_delta_fire.universe, [cv[11]*-1*math.pi/6,0, cv[12]*math.pi/6])
+        theta_delta_fire['PS'] = fuzz.trimf(theta_delta_fire.universe, [0, cv[13]*math.pi/3, cv[14]*math.pi/3])
+
+        # theta_delta_fire['PL'] = fuzz.smf(theta_delta_fire.universe, cv[0]*math.pi/6, cv[0]*math.pi/3)
+        theta_delta_fire['PL'] = fuzz.smf(theta_delta_fire.universe, cv[15]*math.pi/6, cv[16]*math.pi)
+
         #Declare fuzzy sets for the ship_turn consequent; this will be returned as turn_rate.
-        ship_turn['NL'] = fuzz.trimf(ship_turn.universe, [-180,-180,-30])
-        ship_turn['NS'] = fuzz.trimf(ship_turn.universe, [-90,-30,0])
-        ship_turn['Z'] = fuzz.trimf(ship_turn.universe, [-30,0,30])
-        ship_turn['PS'] = fuzz.trimf(ship_turn.universe, [0,30,90])
-        ship_turn['PL'] = fuzz.trimf(ship_turn.universe, [30,180,180])
+        # [-180,180] 
+        ship_turn['NL'] = fuzz.trimf(ship_turn.universe, [cv[17]*-180, cv[18]*-180, cv[19]*-30])
+        ship_turn['NS'] = fuzz.trimf(ship_turn.universe, [cv[20]*-90, cv[21]*-90, 0])
+        ship_turn['Z'] = fuzz.trimf(ship_turn.universe, [cv[22]*-30, 0, cv[23]*30])
+        ship_turn['PS'] = fuzz.trimf(ship_turn.universe, [0, cv[24]*90, cv[25]*90])
+        ship_turn['PL'] = fuzz.trimf(ship_turn.universe, [cv[26]*30, cv[27]*180, cv[28]*180])
         
         #Declare singleton fuzzy sets for the ship_fire consequent; -1 -> don't fire, +1 -> fire; this will be  thresholded
         #   and returned as the boolean 'fire'
