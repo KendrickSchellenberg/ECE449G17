@@ -33,30 +33,16 @@ class G17Controller(KesslerController):
 
         ship_turn_bounds = [-180,180]
 
-        for value in range(0, 7):
-            chromosome[value] = chromosome[value]*(bullet_time_bounds[0] - bullet_time_bounds[1]) + bullet_time_bounds[0]
+        cv = chromosome.gene_value_list
 
-        for value in range(7, 17):
-            chromosome[value] = chromosome[value]*(theta_delta_fire_bounds_small[0] - theta_delta_fire_bounds_small[1]) + theta_delta_fire_bounds_small[0]
+        for value in range(0, 4):
+            chromosome[value] = cv[value]*(bullet_time_bounds[0] - bullet_time_bounds[1]) + bullet_time_bounds[0]
 
-        for value in range(17, 27):
-            chromosome[value] = chromosome[value]*(ship_turn_bounds[0] - ship_turn_bounds[1]) + ship_turn_bounds[0]
-        
-        chromosome[19] = chromosome[19]*-30
+        for value in range(4, 13):
+            chromosome[value] = cv[value]*(theta_delta_fire_bounds_small[0] - theta_delta_fire_bounds_small[1]) + theta_delta_fire_bounds_small[0]
 
-        for value in range(20, 22):
-            chromosome[value] = chromosome[value]*-90
-
-        chromosome[22] = chromosome[22]*-30
-        chromosome[23] = chromosome[23]*30
-
-        for value in range(24, 26):
-            chromosome[value] = chromosome[value]*90
-
-        chromosome[26] = chromosome[26]*30
-
-        for value in range(27, 29):
-            chromosome[value] = chromosome[value]*180
+        for value in range(13, 21):
+            chromosome[value] = cv[value]*(ship_turn_bounds[0] - ship_turn_bounds[1]) + ship_turn_bounds[0]
 
         cv = chromosome.gene_value_list # Do I need to do more than this to replace the original chromosome?
         # need to look more into it... ------
@@ -70,29 +56,29 @@ class G17Controller(KesslerController):
         ship_fire = ctrl.Consequent(np.arange(-1,1,0.1), 'ship_fire') 
         
         #Declare fuzzy sets for bullet_time (how long it takes for the bullet to reach the intercept point)
-        bullet_time['S'] = fuzz.trimf(bullet_time.universe, [0, 0, cv[1]])
-        bullet_time['M'] = fuzz.trimf(bullet_time.universe, [cv[2],cv[3],cv[4]])
-        bullet_time['L'] = fuzz.smf(bullet_time.universe, 0.0, cv[6])
+        bullet_time['S'] = fuzz.trimf(bullet_time.universe, [0, 0, cv[0]])
+        bullet_time['M'] = fuzz.trimf(bullet_time.universe, [cv[1],cv[2],cv[3]])
+        bullet_time['L'] = fuzz.smf(bullet_time.universe, 0.0, cv[4])
         
         #Declare fuzzy sets for theta_delta (degrees of turn needed to reach the calculated firing angle)
         # [-1*math.pi, math.pi]
-        # theta_delta_fire['NL'] = fuzz.zmf(theta_delta_fire.universe, cv[0]*-1*math.pi/3, cv[0]*-1*math.pi/6)
-        theta_delta_fire['NL'] = fuzz.zmf(theta_delta_fire.universe, -1*math.pi/3, cv[8])
+        ## Might have to change zmf to trimf depending on performance
+        theta_delta_fire['NL'] = fuzz.zmf(theta_delta_fire.universe, -1*math.pi/3, cv[5])
 
-        theta_delta_fire['NS'] = fuzz.trimf(theta_delta_fire.universe, [cv[9], cv[10],0])
-        theta_delta_fire['Z'] = fuzz.trimf(theta_delta_fire.universe, [cv[11], 0, cv[12]])
-        theta_delta_fire['PS'] = fuzz.trimf(theta_delta_fire.universe, [0, cv[13], cv[14]])
-
-        # theta_delta_fire['PL'] = fuzz.smf(theta_delta_fire.universe, cv[0]*math.pi/6, cv[0]*math.pi/3)
-        theta_delta_fire['PL'] = fuzz.smf(theta_delta_fire.universe, cv[15], math.pi/3)
+        theta_delta_fire['NS'] = fuzz.trimf(theta_delta_fire.universe, [cv[6], cv[7],0])
+        theta_delta_fire['Z'] = fuzz.trimf(theta_delta_fire.universe, [cv[8], 0, cv[9]])
+        theta_delta_fire['PS'] = fuzz.trimf(theta_delta_fire.universe, [0, cv[10], cv[11]])
+        
+        ## Might have to change smf to trimf depending on performance
+        theta_delta_fire['PL'] = fuzz.smf(theta_delta_fire.universe, cv[12], math.pi/3)
 
         #Declare fuzzy sets for the ship_turn consequent; this will be returned as turn_rate.
         # [-180,180] 
-        ship_turn['NL'] = fuzz.trimf(ship_turn.universe, [-180, -180, cv[19]])
-        ship_turn['NS'] = fuzz.trimf(ship_turn.universe, [cv[20], cv[21], 0])
-        ship_turn['Z'] = fuzz.trimf(ship_turn.universe, [cv[22], 0, cv[23]])
-        ship_turn['PS'] = fuzz.trimf(ship_turn.universe, [0, cv[24], cv[25]])
-        ship_turn['PL'] = fuzz.trimf(ship_turn.universe, [cv[26], 180, 180])
+        ship_turn['NL'] = fuzz.trimf(ship_turn.universe, [-180, -180, cv[13]])
+        ship_turn['NS'] = fuzz.trimf(ship_turn.universe, [cv[14], cv[15], 0])
+        ship_turn['Z'] = fuzz.trimf(ship_turn.universe, [cv[16], 0, cv[17]])
+        ship_turn['PS'] = fuzz.trimf(ship_turn.universe, [0, cv[18], cv[19]])
+        ship_turn['PL'] = fuzz.trimf(ship_turn.universe, [cv[20], 180, 180])
         
         #Declare singleton fuzzy sets for the ship_fire consequent; -1 -> don't fire, +1 -> fire; this will be  thresholded
         #   and returned as the boolean 'fire'
