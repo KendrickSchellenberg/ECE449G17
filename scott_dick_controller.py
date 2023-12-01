@@ -214,7 +214,7 @@ class ScottDickController(KesslerController):
         #DEBUG
         print(thrust, bullet_t, shooting_theta, turn_rate, fire)
         
-        return thrust, turn_rate, fire, False
+        return thrust, turn_rate, fire
 
     @property
     def name(self) -> str:
