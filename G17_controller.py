@@ -24,35 +24,11 @@ class G17Controller(KesslerController):
         self.closest_distances = []
         self.ship_approaching_list = []
 
-        chromosome_values = chromosome
+        chromosome_values = chromosome.gene_value_list
 
-        sublists = [chromosome_values[i:i+4] for i in range(0, len(chromosome_values), 4)]
-
-        # Sort the first three elements in each sublist
-        sorted_sublists = [sorted(sublist[:3]) + sublist[3:] for sublist in sublists]
-
-        # Flatten the sorted sublists to get the final sorted list
-        sorted_list = [item for sublist in sorted_sublists for item in sublist]
 
         # Replace the values in the original chromosome list with the sorted values
         index = 0
-        for sublist in sorted_sublists:
-            for item in sublist:
-                chromosome[index] = item
-                index += 1
-
-        # Now, chromosome contains sublists of four elements where the first three are sorted
-        # First three values are used to determine ideal vertice for poor, upper poor and lower good bound, and ideal vertice for good. Last value used for ideal vertice for average
-
-        # Separate the first five and last three tip_amount values
-        first_five_values = sorted(chromosome_values[40:45])
-        last_three_values = sorted(chromosome_values[45:])
-
-        # Combine the sorted values
-        sorted_tip_amount_values = first_five_values + last_three_values
-
-        # Replace the values in the original chromosome list with the sorted values
-        index = 40
         for value in sorted_tip_amount_values:
             chromosome[index] = value
             index += 1
@@ -61,6 +37,43 @@ class G17Controller(KesslerController):
 
         cv = chromosome_values
 
+        for value in range(0, 7):
+            cv[value] = cv[value]*0.1
+
+        cv[7] = cv[7]*-1*math.pi
+        cv[8] = cv[8]*-1*math.pi/6
+        for value in range(9, 11):
+            cv[value] = cv[value]*-1*math.pi/3
+
+        cv[11] = cv[11]*-1*math.pi/6
+        cv[12] = cv[12]*1*math.pi/6
+
+        for value in range(13, 15):
+            cv[value] = cv[value]*1*math.pi/3
+
+        cv[15] = cv[15]*-1*math.pi/6
+        cv[16] = cv[16]*-1*math.pi
+
+        for value in range(17, 19):
+            cv[value] = cv[value]*-180
+        
+        cv[19] = cv[19]*-30
+
+        for value in range(20, 22):
+            cv[value] = cv[value]*-90
+
+        cv[22] = cv[22]*-30
+        cv[23] = cv[23]*30
+
+        for value in range(24, 26):
+            cv[value] = cv[value]*90
+
+        cv[26] = cv[26]*30
+
+        for value in range(27, 29):
+            cv[value] = cv[value]*180
+
+        chromosome = cv
         # self.targeting_control is the targeting rulebase, which is static in this controller.      
         # Declare variables
         bullet_time = ctrl.Antecedent(np.arange(0,1.0,0.002), 'bullet_time')
@@ -79,7 +92,7 @@ class G17Controller(KesslerController):
         theta_delta_fire['NL'] = fuzz.zmf(theta_delta_fire.universe, cv[7]*-1*math.pi, cv[8]*-1*math.pi/6)
 
         theta_delta_fire['NS'] = fuzz.trimf(theta_delta_fire.universe, [cv[9]*-1*math.pi/3, cv[10]*-1*math.pi/3,0])
-        theta_delta_fire['Z'] = fuzz.trimf(theta_delta_fire.universe, [cv[11]*-1*math.pi/6,0, cv[12]*math.pi/6])
+        theta_delta_fire['Z'] = fuzz.trimf(theta_delta_fire.universe, [cv[11]*-1*math.pi/6, 0, cv[12]*math.pi/6])
         theta_delta_fire['PS'] = fuzz.trimf(theta_delta_fire.universe, [0, cv[13]*math.pi/3, cv[14]*math.pi/3])
 
         # theta_delta_fire['PL'] = fuzz.smf(theta_delta_fire.universe, cv[0]*math.pi/6, cv[0]*math.pi/3)
