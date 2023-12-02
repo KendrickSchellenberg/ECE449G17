@@ -88,7 +88,7 @@ class FuzzyGAController():
         ```````
         """
         variable_value = random.uniform(0, 1)
-        print("\tThis is the value that is generated", variable_value)
+        # print("\tThis is the value that is generated", variable_value)
         return variable_value
 
     def export_chromosome(self):
