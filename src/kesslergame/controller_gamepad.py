@@ -13,7 +13,7 @@ class GamepadController(KesslerController):
     def __init__(self):
         self.gamepad = XboxController()
         # tracker to determine if human paused game
-        self.paused = False
+        self.paused = Falslwle
         self.time_last_paused = 0.0
         # can only toggle pausing every 0.5 seconds
         self.pause_time_buffer = 0.5

@@ -6,7 +6,7 @@
 # Please see the Kessler Game Development Guide by Dr. Scott Dick for a
 #   detailed discussion of this source code.
 
-from kesslergame import KesslerController # In Eclipse, the name of the library is kesslergame, not src.kesslergame
+from src.kesslergame import KesslerController # In Eclipse, the name of the library is kesslergame, not src.kesslergame
 from typing import Dict, Tuple
 from cmath import sqrt
 import skfuzzy as fuzz

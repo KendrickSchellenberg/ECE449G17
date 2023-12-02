@@ -2,8 +2,8 @@
 # NOTICE: This file is subject to the license agreement defined in file 'LICENSE', which is part of
 # this source code package.
 import time
-from kesslergame import Scenario, KesslerGame, GraphicsType
-from test_controller import TestController
+from src.kesslergame import Scenario, KesslerGame, GraphicsType
+# from test_controller import TestController
 from scott_dick_controller import ScottDickController
 from G17_controller import G17Controller
 from graphics_both import GraphicsBoth
