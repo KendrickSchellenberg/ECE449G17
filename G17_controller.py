@@ -17,12 +17,8 @@ import numpy as np
 import matplotlib as plt
 
 class G17Controller(KesslerController):
-    # Make it sort 
-    # then put it back in the chromosome 
-    # return a scaled sublist
     def scale_min_max(self, min, max, rng):
         cv = self.chromosome.gene_value_list
-        # print()
         sublist = cv[rng[0] : rng[1]]
 
         # Sorted in ascending order
@@ -36,37 +32,28 @@ class G17Controller(KesslerController):
         for val in sublist:
             sublist[index] = val*(max-min) + min
             index += 1
-        print("This is the sublist:, \t", sublist)
         return sublist
 
     def __init__(self, chromosome = 10):
-        self.chromosome = chromosome
-        print("This is the gene that is generated", chromosome)
-        print("Lenth of chromsome", len(chromosome))
-
         self.eval_frames = 0 #What is this?
+        self.chromosome = chromosome
 
         self.closest_distances = []
         self.ship_approaching_list = []
 
-        bullet_time_bounds = [0, 1.0] # preferably would do [0, 0.1]
-        # but maybe genetic algorithm will find the ideal case that is higher than 0.1
-
+        # bullet_time_bounds = [0, 1.0] # preferably would do [0, 0.1]
+        bullet_time_bounds = [0, 0.1] 
         theta_delta_fire_bounds_large = [-1*math.pi, math.pi]
-        theta_delta_fire_bounds_small = [-1*math.pi/3, math.pi/3] # we are going to use this for more precise turns...
-        ####  -------------- Fix The chromosome values.... And also maybe change the zmf to smf...
+        theta_delta_fire_bounds_small = [-1*math.pi/3, math.pi/3]
         theta_delta_fire_bounds_smaller = [-1*math.pi/6, math.pi/6]
-
         ship_turn_bounds = [-180,180]
         ship_turn_bounds_small = [-90,90]
 
         bullet_time_vals = self.scale_min_max(bullet_time_bounds[0], bullet_time_bounds[1], [0, 5])
         delta_fire_vals = self.scale_min_max(theta_delta_fire_bounds_small[0], theta_delta_fire_bounds_small[1], [5, 10])
-
         delta_fire_small_vals = self.scale_min_max(theta_delta_fire_bounds_smaller[0], theta_delta_fire_bounds_smaller[1], [10, 13])
         ship_turn_vals = self.scale_min_max(ship_turn_bounds[0], ship_turn_bounds[1], [13, 18])
         ship_turn_small_vals = self.scale_min_max(ship_turn_bounds_small[0], ship_turn_bounds_small[1], [18, 21])
-
 
         # self.targeting_control is the targeting rulebase, which is static in this controller.      
         # Declare variables
@@ -74,14 +61,6 @@ class G17Controller(KesslerController):
         theta_delta_fire = ctrl.Antecedent(np.arange(-1*math.pi, math.pi, 0.1), 'theta_delta_fire') # Radians due to Python
         ship_turn = ctrl.Consequent(np.arange(-180,180,1), 'ship_turn') # Degrees due to Kessler
         ship_fire = ctrl.Consequent(np.arange(-1,1,0.1), 'ship_fire') 
-        
-        #Declare fuzzy sets for bullet_time (how long it takes for the bullet to reach the intercept point)
-        # print("This is bullet_time array\t", bullet_time_vals)
-        # print("This is theta_delta_fire array bound small\t", delta_fire_vals)
-        # print("This is theta_delta_fire array bound large\t", delta_fire_small_vals)
-
-        # print("This is ship_turn array\t", ship_turn_vals)
-        # print("This is ship_turn array large\t", ship_turn_small_vals)
 
         bullet_time['S'] = fuzz.trimf(bullet_time.universe, [0, bullet_time_vals[0], bullet_time_vals[1]])
         bullet_time['M'] = fuzz.trimf(bullet_time.universe, [bullet_time_vals[1],bullet_time_vals[2],bullet_time_vals[3]])
@@ -89,14 +68,10 @@ class G17Controller(KesslerController):
         
         #Declare fuzzy sets for theta_delta (degrees of turn needed to reach the calculated firing angle)
         # [-1*math.pi, math.pi]
-        ## Might have to change zmf to trimf depending on performance
         theta_delta_fire['NL'] = fuzz.zmf(theta_delta_fire.universe, delta_fire_vals[0], delta_fire_vals[1])
-
         theta_delta_fire['NS'] = fuzz.trimf(theta_delta_fire.universe, [-1*math.pi/3, delta_fire_small_vals[0], delta_fire_small_vals[1]])
         theta_delta_fire['Z'] = fuzz.trimf(theta_delta_fire.universe, [delta_fire_vals[1], delta_fire_vals[2], delta_fire_vals[3]])
         theta_delta_fire['PS'] = fuzz.trimf(theta_delta_fire.universe, [delta_fire_small_vals[1], delta_fire_small_vals[2], math.pi/3])
-        
-        ## Might have to change smf to trimf depending on performance
         theta_delta_fire['PL'] = fuzz.smf(theta_delta_fire.universe, delta_fire_vals[3], delta_fire_vals[4])
 
         #Declare fuzzy sets for the ship_turn consequent; this will be returned as turn_rate.
@@ -172,105 +147,39 @@ class G17Controller(KesslerController):
         ship_speed = ctrl.Antecedent(np.arange(0, 240, 1), 'ship_speed')
         theta_delta_turn = ctrl.Antecedent(np.arange(-1*math.pi, math.pi, 0.1), 'theta_delta_turn')
         ship_thrust = ctrl.Consequent(np.arange(-480, 480, 1), 'ship_thrust')
-        
-        """
-        # distance
-        closest_asteroid_distance['S'] = fuzz.trimf(closest_asteroid_distance.universe,[0,50,100])
-        closest_asteroid_distance['M'] = fuzz.trimf(closest_asteroid_distance.universe, [100,200,300])
-        closest_asteroid_distance['L'] = fuzz.trimf(closest_asteroid_distance.universe, [200,400,1000])
 
-        # speed
-        ship_speed['S'] = fuzz.trimf(ship_speed.universe,[0,0,30])
-        ship_speed['M'] = fuzz.trimf(ship_speed.universe, [30,90,120])
-        ship_speed['L'] = fuzz.trimf(ship_speed.universe, [100,240,240])
-
-        #Declare fuzzy sets for theta_delta (degrees of turn needed to reach the calculated firing angle)
-        theta_delta_turn['NL'] = fuzz.zmf(theta_delta_turn.universe, -1*math.pi/3,-1*math.pi/6)
-        theta_delta_turn['NS'] = fuzz.trimf(theta_delta_turn.universe, [-1*math.pi/3,-1*math.pi/6,0])
-        theta_delta_turn['Z'] = fuzz.trimf(theta_delta_turn.universe, [-1*math.pi/6,0,math.pi/6])
-        theta_delta_turn['PS'] = fuzz.trimf(theta_delta_turn.universe, [0,math.pi/6,math.pi/3])
-        theta_delta_turn['PL'] = fuzz.smf(theta_delta_turn.universe,math.pi/6,math.pi/3)
-        
-
-        # Declare fuzzy sets for the ship_thrust consequent; this will be returned as ship_thrust.
-        ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,-480,-30])
-        ship_thrust['NS'] = fuzz.trimf(ship_thrust.universe, [-150,-90,0])
-        ship_thrust['Z'] = fuzz.trimf(ship_thrust.universe, [-30,0,30])
-        ship_thrust['PS'] = fuzz.trimf(ship_thrust.universe, [0,90,150])
-        ship_thrust['PL'] = fuzz.trimf(ship_thrust.universe, [30,480,480])
-
-        # make a,b,c,d..... the index based on where ur last one was used since u will be altering it first
-
-        """
         # distance        
         closest_asteroid_values = self.scale_min_max(0, 1000, (21,26))
-        # closest_asteroid_values = self.chromosome.gene_value_list[21:26]
-        # cv = self.chromosome.gene_value_list 
         closest_asteroid_distance['S'] = fuzz.trimf(closest_asteroid_distance.universe,[0,closest_asteroid_values[0],closest_asteroid_values[1]])
         closest_asteroid_distance['M'] = fuzz.trimf(closest_asteroid_distance.universe, [closest_asteroid_values[1],closest_asteroid_values[2],closest_asteroid_values[3]])
-        # closest_asteroid_distance['L'] = fuzz.trimf(closest_asteroid_distance.universe, [closest_asteroid_values[3],closest_asteroid_values[4],1000])
         closest_asteroid_distance['L'] = fuzz.smf(closest_asteroid_distance.universe, closest_asteroid_values[3],closest_asteroid_values[4])
-
-        # closest_asteroid_distance['S'] = fuzz.trimf(closest_asteroid_distance.universe,[0,cv[21],cv[22]])
-        # closest_asteroid_distance['M'] = fuzz.trimf(closest_asteroid_distance.universe, [cv[22],cv[23],cv[24]])
-        # closest_asteroid_distance['L'] = fuzz.trimf(closest_asteroid_distance.universe, [cv[24],cv[25],1000])
 
         # speed
         ship_speed_values =self.scale_min_max(0, 240, (26,31))
-        # cv = self.chromosome.gene_value_list 
-
-        # ship_speed_values = self.chromosome.gene_value_list[26:31]
         ship_speed['S'] = fuzz.zmf(ship_speed.universe, ship_speed_values[0], ship_speed_values[1])
-
-        # ship_speed['S'] = fuzz.trimf(ship_speed.universe,[0,ship_speed_values[0],ship_speed_values[1]])
         ship_speed['M'] = fuzz.trimf(ship_speed.universe, [ship_speed_values[1],ship_speed_values[2],ship_speed_values[3]])
-        # ship_speed['L'] = fuzz.trimf(ship_speed.universe, [ship_speed_values[3],ship_speed_values[4],240])
         ship_speed['L'] = fuzz.smf(ship_speed.universe, ship_speed_values[3], ship_speed_values[4])
-
-        # print("This is ship_speed", cv[26:31])
-        # ship_speed['S'] = fuzz.trimf(ship_speed.universe,[0,cv[26],cv[27]])
-        # ship_speed['M'] = fuzz.trimf(ship_speed.universe, [cv[27],cv[28],cv[29]])
-        # ship_speed['L'] = fuzz.trimf(ship_speed.universe, [cv[29],cv[30],240])
 
         #Declare fuzzy sets for theta_delta (degrees of turn needed to reach the calculated firing angle)
         turn_values =self.scale_min_max(-1*math.pi/3, math.pi/3, (31, 36))
         turn_values_big = self.scale_min_max(-1*math.pi/6, math.pi/6, (36, 39))
-        # turn_values = self.chromosome.gene_value_list[31:39]
-        cv = self.chromosome.gene_value_list 
+
         theta_delta_turn['NL'] = fuzz.zmf(theta_delta_turn.universe, turn_values[0], turn_values[1])
         theta_delta_turn['NS'] = fuzz.trimf(theta_delta_turn.universe, [-1*math.pi/6, turn_values_big[0], turn_values_big[1]])
         theta_delta_turn['Z'] = fuzz.trimf(theta_delta_turn.universe, [turn_values[1], turn_values[2], turn_values[3]])
         theta_delta_turn['PS'] = fuzz.trimf(theta_delta_turn.universe, [turn_values_big[1], turn_values_big[2], math.pi/6])
         theta_delta_turn['PL'] = fuzz.smf(theta_delta_turn.universe, turn_values[3], turn_values[4])
         
-
-        # theta_delta_turn['NL'] = fuzz.zmf(theta_delta_turn.universe, cv[31], cv[32])
-        # theta_delta_turn['NS'] = fuzz.trimf(theta_delta_turn.universe, [-1*math.pi/3, cv[36], cv[37]])
-        # theta_delta_turn['Z'] = fuzz.trimf(theta_delta_turn.universe, [cv[32], cv[33], cv[34]])
-        # theta_delta_turn['PS'] = fuzz.trimf(theta_delta_turn.universe, [cv[37], cv[38], math.pi/3])
-        # theta_delta_turn['PL'] = fuzz.smf(theta_delta_turn.universe, cv[34], cv[35])
-
         # Declare fuzzy sets for the ship_thrust consequent; this will be returned as ship_thrust.
         ship_thrust_values = self.scale_min_max(-150, 150, (39,44))
         ship_thrust_values_small = self.scale_min_max(-480, 480, (44,47))
-        # ship_thrust_values = self.chromosome.gene_value_list[39:47]
-        # cv = self.chromosome.gene_value_list 
+
         # ship_thrust['NL'] = fuzz.zmf(ship_thrust.universe, ship_thrust_values[0], ship_thrust_values[1])
         ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,ship_thrust_values[0],ship_thrust_values[1]])
         ship_thrust['NS'] = fuzz.trimf(ship_thrust.universe, [-480,ship_thrust_values_small[0],ship_thrust_values_small[1]])
         ship_thrust['Z'] = fuzz.trimf(ship_thrust.universe, [ship_thrust_values[1],ship_thrust_values[2],ship_thrust_values[3]])
         ship_thrust['PS'] = fuzz.trimf(ship_thrust.universe, [ship_thrust_values_small[1],ship_thrust_values_small[2], 480])
         ship_thrust['PL'] = fuzz.trimf(ship_thrust.universe, [ship_thrust_values[3],ship_thrust_values[4],480])
-        # ship_thrust['PL'] = fuzz.smf(ship_thrust.universe, ship_thrust_values[3], ship_thrust_values[4])
-        
-        # ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,cv[39],cv[40]])
-
-        # ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,cv[39],cv[40]])
-        # ship_thrust['NS'] = fuzz.trimf(ship_thrust.universe, [-150,cv[44],cv[45]])
-        # ship_thrust['Z'] = fuzz.trimf(ship_thrust.universe, [cv[40],cv[41],cv[42]])
-        # ship_thrust['PS'] = fuzz.trimf(ship_thrust.universe, [cv[45],cv[46],150])
-        # ship_thrust['PL'] = fuzz.trimf(ship_thrust.universe, [cv[42],cv[43],480])
-
 
         #Declare each fuzzy rule
         rule16 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['NL'], (ship_thrust['Z']))

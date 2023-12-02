@@ -95,7 +95,16 @@ class FuzzyGAController():
         """
         Returns the best developed chromosome.
         """
-        return self.best_chromsome
+        with open("best_chromosome.txt", "w") as file:
+            file.write(self.best_chromosome)
+        return self.best_chromosome
+    
+    def open_run(self, filename):
+        with open(filename, 'r') as file:
+            chromosome = file.read()
+        print("This is the chromosome from the file:\n\t", chromosome)
+        self.fitness(chromosome)
+
 
     def run(self):
         """
@@ -117,7 +126,7 @@ class FuzzyGAController():
         ga.fitness_function_impl = self.fitness
         ga.evolve()
         ga.print_best_chromosome()
-        self.best_chromsome = ga.print_best_chromosome()
+        self.best_chromosome = ga.print_best_chromosome()
         # Now what do i do with the best chromosome?
         #### Reference Kendrick's Lab on Test Dataset Evaluation
 
