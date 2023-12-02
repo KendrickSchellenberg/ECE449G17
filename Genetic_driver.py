@@ -91,22 +91,20 @@ class FuzzyGAController():
         # print("\tThis is the value that is generated", variable_value)
         return variable_value
 
-    def export_chromosome(self, print):
+    def export_chromosome(self, ga):
         """
         Returns the best developed chromosome.
         """
-        print("Writing to file the best result")
         with open("best_chromosome.txt", "w") as file:
-            file.write(print)
+            file.write(str(ga.population[0]))
         return self.best_chromosome
     
-    def open_run(self, filename):
+    def open_run(self, filename = "best_chromosome.txt"):
         import re
         # ga = EasyGA()
         from EasyGA.structure import Chromosome as ga
         with open(filename, 'r') as file:
             chromosome = file.read()
-            # chromosome = chromosome.astype(float)
             # print(type(chromosome))
         # Extract numbers using regular expression
         numbers = re.findall(r'\d+\.\d+', chromosome)
@@ -163,14 +161,12 @@ class FuzzyGAController():
         ga.target_fitness_type = "min"
         ### ------
 
-        ga.generation_goal = 5
+        ga.generation_goal = 2
         ga.fitness_function_impl = self.fitness
         ga.evolve()
         ga.print_best_chromosome()
-        self.best_chromosome = ga.print_best_chromosome()
-        self.export_chromosome()
-        # Now what do i do with the best chromosome?
-        #### Reference Kendrick's Lab on Test Dataset Evaluation
+        self.best_chromosome = ga.population[0]
+        self.export_chromosome(ga)
 
 ctrl = FuzzyGAController()
 ctrl.run()

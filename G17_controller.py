@@ -112,8 +112,6 @@ class G17Controller(KesslerController):
         # ship_turn.view()
         # ship_fire.view()
      
-     
-        
         # Declare the fuzzy controller, add the rules 
         # This is an instance variable, and thus available for other methods in the same object. See notes.                         
         # self.targeting_control = ctrl.ControlSystem([rule1, rule2, rule3, rule4, rule5, rule6, rule7, rule8, rule9, rule10, rule11, rule12, rule13, rule14, rule15])
