@@ -20,6 +20,7 @@ class G17Controller(KesslerController):
     def scale_min_max(self, min, max, rng):
         cv = self.chromosome.gene_value_list
         sublist = list()
+        # print()
         for i in range(rng[0], rng[1]):
             new_value = cv[i]*(max-min) + min
             sublist.append(new_value)
@@ -33,8 +34,8 @@ class G17Controller(KesslerController):
 
     def __init__(self, chromosome = 10):
         self.chromosome = chromosome
-        print(chromosome)
-        print(len(chromosome))
+        print("This is the gene that is generated", chromosome)
+        print("Lenth of chromsome", len(chromosome))
 
         self.eval_frames = 0 #What is this?
 
@@ -52,7 +53,7 @@ class G17Controller(KesslerController):
         ship_turn_bounds = [-180,180]
         ship_turn_bounds_small = [-90,90]
 
-        cv = chromosome.gene_value_list
+        cv = self.chromosome.gene_value_list
 
         self.scale_min_max(bullet_time_bounds[0], bullet_time_bounds[1], [0, 5])
         self.scale_min_max(theta_delta_fire_bounds_small[0], theta_delta_fire_bounds_small[1], [5, 10])
@@ -61,7 +62,7 @@ class G17Controller(KesslerController):
         self.scale_min_max(ship_turn_bounds[0], ship_turn_bounds[1], [13, 18])
         self.scale_min_max(ship_turn_bounds_small[0], ship_turn_bounds_small[1], [18, 21])
 
-        cv = chromosome.gene_value_list 
+        cv = self.chromosome.gene_value_list 
 
         # self.targeting_control is the targeting rulebase, which is static in this controller.      
         # Declare variables
@@ -71,6 +72,13 @@ class G17Controller(KesslerController):
         ship_fire = ctrl.Consequent(np.arange(-1,1,0.1), 'ship_fire') 
         
         #Declare fuzzy sets for bullet_time (how long it takes for the bullet to reach the intercept point)
+        print("This is bullet_time array\t", cv[0 : 5])
+        print("This is theta_delta_fire array bound small\t", cv[5 : 10])
+        print("This is theta_delta_fire array bound large\t", cv[10 : 13])
+
+        print("This is ship_turn array\t", cv[13 : 18])
+        print("This is ship_turn array large\t", cv[18 : 21])
+
         bullet_time['S'] = fuzz.trimf(bullet_time.universe, [0, cv[0], cv[1]])
         bullet_time['M'] = fuzz.trimf(bullet_time.universe, [cv[1],cv[2],cv[3]])
         bullet_time['L'] = fuzz.trimf(bullet_time.universe, [cv[3], cv[4], 1.0])
@@ -120,9 +128,9 @@ class G17Controller(KesslerController):
         rule15 = ctrl.Rule(bullet_time['S'] & theta_delta_fire['PL'], (ship_turn['PL'], ship_fire['Y']))
      
         #DEBUG
-        #bullet_time.view()
-        #theta_delta.view()
-        #ship_turn.view()
+        bullet_time.view()
+        theta_delta_fire.view()
+        ship_turn.view()
         #ship_fire.view()
      
      
@@ -160,12 +168,38 @@ class G17Controller(KesslerController):
         theta_delta_turn = ctrl.Antecedent(np.arange(-1*math.pi, math.pi, 0.1), 'theta_delta_turn')
         ship_thrust = ctrl.Consequent(np.arange(-480, 480, 1), 'ship_thrust')
 
+        # distance
+        closest_asteroid_distance['S'] = fuzz.trimf(closest_asteroid_distance.universe,[0,50,100])
+        closest_asteroid_distance['M'] = fuzz.trimf(closest_asteroid_distance.universe, [100,200,300])
+        closest_asteroid_distance['L'] = fuzz.trimf(closest_asteroid_distance.universe, [200,400,1000])
+
+        # speed
+        ship_speed['S'] = fuzz.trimf(ship_speed.universe,[0,0,30])
+        ship_speed['M'] = fuzz.trimf(ship_speed.universe, [30,90,120])
+        ship_speed['L'] = fuzz.trimf(ship_speed.universe, [100,240,240])
+
+        #Declare fuzzy sets for theta_delta (degrees of turn needed to reach the calculated firing angle)
+        theta_delta_turn['NL'] = fuzz.zmf(theta_delta_turn.universe, -1*math.pi/3,-1*math.pi/6)
+        theta_delta_turn['NS'] = fuzz.trimf(theta_delta_turn.universe, [-1*math.pi/3,-1*math.pi/6,0])
+        theta_delta_turn['Z'] = fuzz.trimf(theta_delta_turn.universe, [-1*math.pi/6,0,math.pi/6])
+        theta_delta_turn['PS'] = fuzz.trimf(theta_delta_turn.universe, [0,math.pi/6,math.pi/3])
+        theta_delta_turn['PL'] = fuzz.smf(theta_delta_turn.universe,math.pi/6,math.pi/3)
+        
+
+        # Declare fuzzy sets for the ship_thrust consequent; this will be returned as ship_thrust.
+        ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,-480,-30])
+        ship_thrust['NS'] = fuzz.trimf(ship_thrust.universe, [-150,-90,0])
+        ship_thrust['Z'] = fuzz.trimf(ship_thrust.universe, [-30,0,30])
+        ship_thrust['PS'] = fuzz.trimf(ship_thrust.universe, [0,90,150])
+        ship_thrust['PL'] = fuzz.trimf(ship_thrust.universe, [30,480,480])
+
         # make a,b,c,d..... the index based on where ur last one was used since u will be altering it first
 
+        """
         # distance        
         self.scale_min_max(0, 1000, (21,26))
         closest_asteroid_values = self.chromosome.gene_value_list[21:26]
-        cv = chromosome.gene_value_list 
+        cv = self.chromosome.gene_value_list 
         # closest_asteroid_distance['S'] = fuzz.trimf(closest_asteroid_distance.universe,[0,closest_asteroid_values[0],closest_asteroid_values[1]])
         # closest_asteroid_distance['M'] = fuzz.trimf(closest_asteroid_distance.universe, [closest_asteroid_values[1],closest_asteroid_values[2],closest_asteroid_values[3]])
         # closest_asteroid_distance['L'] = fuzz.trimf(closest_asteroid_distance.universe, [closest_asteroid_values[3],closest_asteroid_values[4],1000])
@@ -176,7 +210,7 @@ class G17Controller(KesslerController):
 
         # speed
         self.scale_min_max(0, 240, (26,31))
-        cv = chromosome.gene_value_list 
+        cv = self.chromosome.gene_value_list 
 
         # ship_speed_values = self.chromosome.gene_value_list[26:31]
         # ship_speed['S'] = fuzz.trimf(ship_speed.universe,[0,ship_speed_values[0],ship_speed_values[1]])
@@ -192,7 +226,7 @@ class G17Controller(KesslerController):
         self.scale_min_max(-1*math.pi/6, math.pi/6, (31, 36))
         self.scale_min_max(-1*math.pi/3, math.pi/3, (36, 39))
         turn_values = self.chromosome.gene_value_list[31:39]
-        cv = chromosome.gene_value_list 
+        cv = self.chromosome.gene_value_list 
         # theta_delta_turn['NL'] = fuzz.zmf(theta_delta_turn.universe, turn_values[0], turn_values[1])
         # theta_delta_turn['NS'] = fuzz.trimf(theta_delta_turn.universe, [-1*math.pi/3, turn_values[5], turn_values[6]])
         # theta_delta_turn['Z'] = fuzz.trimf(theta_delta_turn.universe, [turn_values[1], turn_values[2], turn_values[3]])
@@ -210,7 +244,7 @@ class G17Controller(KesslerController):
         self.scale_min_max(-480, 480, (39,44))
         self.scale_min_max(-150, 150, (44,47))
         ship_thrust_values = self.chromosome.gene_value_list[39:47]
-        cv = chromosome.gene_value_list 
+        cv = self.chromosome.gene_value_list 
         # ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,ship_thrust_values[0],ship_thrust_values[1]])
         # ship_thrust['NS'] = fuzz.trimf(ship_thrust.universe, [-150,ship_thrust_values[5],ship_thrust_values[6]])
         # ship_thrust['Z'] = fuzz.trimf(ship_thrust.universe, [ship_thrust_values[1],ship_thrust_values[2],ship_thrust_values[3]])
@@ -218,10 +252,14 @@ class G17Controller(KesslerController):
         # ship_thrust['PL'] = fuzz.trimf(ship_thrust.universe, [ship_thrust_values[3],ship_thrust_values[4],480])
         
         ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,cv[39],cv[40]])
+
+        ship_thrust['NL'] = fuzz.trimf(ship_thrust.universe, [-480,cv[39],cv[40]])
         ship_thrust['NS'] = fuzz.trimf(ship_thrust.universe, [-150,cv[44],cv[45]])
         ship_thrust['Z'] = fuzz.trimf(ship_thrust.universe, [cv[40],cv[41],cv[42]])
         ship_thrust['PS'] = fuzz.trimf(ship_thrust.universe, [cv[45],cv[46],150])
         ship_thrust['PL'] = fuzz.trimf(ship_thrust.universe, [cv[42],cv[43],480])
+
+        """
 
         #Declare each fuzzy rule
         rule16 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['NL'], (ship_thrust['Z']))
@@ -327,6 +365,11 @@ class G17Controller(KesslerController):
         self.ship_control.addrule(rule58)
         self.ship_control.addrule(rule59)
         self.ship_control.addrule(rule60)
+
+        # closest_asteroid_distance.view()
+        # ship_speed.view()
+        # theta_delta_turn.view()
+        # ship_thrust.view()
 
 
     def actions(self, ship_state: Dict, game_state: Dict) -> Tuple[float, float, bool]:
@@ -451,7 +494,7 @@ class G17Controller(KesslerController):
         self.eval_frames +=1
         
         #DEBUG
-        print(thrust, bullet_t, shooting_theta, turn_rate, fire, closest_asteroid["dist"])
+        # print(thrust, bullet_t, shooting_theta, turn_rate, fire, closest_asteroid["dist"])
         
         # Store the closest distance in the list
         self.closest_distances.append(closest_asteroid["dist"])
