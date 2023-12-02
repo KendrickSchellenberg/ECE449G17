@@ -42,8 +42,8 @@ class Test():
                 'realtime_multiplier': 1,
                 'graphics_obj': None}
         
-        # game = KesslerGame(settings=game_settings) # Use this to visualize the game scenario
-        game = TrainerEnvironment(settings=game_settings) # Use this for max-speed, no-graphics simulation
+        game = KesslerGame(settings=game_settings) # Use this to visualize the game scenario
+        # game = TrainerEnvironment(settings=game_settings) # Use this for max-speed, no-graphics simulation
         score, perf_data = game.run(scenario=my_test_scenario, controllers = [self.__ctrl])
         self.__score = score
         # print("This is the score", score)
