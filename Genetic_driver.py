@@ -103,7 +103,7 @@ class FuzzyGAController():
         ga = EasyGA.GA()
         ga.gene_impl = self.gen_chromosome
         # ga.chromosome_impl = self.gen_chromosome
-        ga.chromosome_length = 21 # Will vary depending on how important the length is.
+        ga.chromosome_length = 47 # Will vary depending on how important the length is.
         ga.population_size = 5
 
         ### The target fitness type will have to vary because we are looking 
