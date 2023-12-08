@@ -33,7 +33,7 @@ class Test():
                     {'position': (400, 400), 'angle': 90, 'lives': 3, 'team': 1},
                     ],
                     map_size=(1000, 800),
-                    time_limit=60,
+                    time_limit=30,
                     ammo_limit_multiplier=0,
                     stop_if_no_ammo=False)
         
@@ -42,8 +42,8 @@ class Test():
                 'realtime_multiplier': 1,
                 'graphics_obj': None}
         
-        game = KesslerGame(settings=game_settings) # Use this to visualize the game scenario
-        # game = TrainerEnvironment(settings=game_settings) # Use this for max-speed, no-graphics simulation
+        #game = KesslerGame(settings=game_settings) # Use this to visualize the game scenario
+        game = TrainerEnvironment(settings=game_settings) # Use this for max-speed, no-graphics simulation
         score, perf_data = game.run(scenario=my_test_scenario, controllers = [self.__ctrl])
         self.__score = score
         # print("This is the score", score)
