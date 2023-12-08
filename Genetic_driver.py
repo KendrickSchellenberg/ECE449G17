@@ -30,7 +30,7 @@ class FuzzyGAController():
     def fitness(self, chromosome):
         """
         This fitness function will create a Controller class instance and that will be tested by the Test class
-        which has the test scenario defined and the Score collected will be used to define the error of the 
+        which has the test scenario defined and the Score collected will be used to define the fitness of the 
         Genetic Algorithm model.
 
         Scoring Criteria:
@@ -116,7 +116,7 @@ class FuzzyGAController():
         ga.gene_impl = self.gen_chromosome
 
         ga.chromosome_length = 47 # Will vary depending on how important the length is.
-        ga.population_size = 10
+        ga.population_size = 5
 
         ### The target fitness type will have to vary because we are looking 
         ## For max accuracy, distance from nearest asteroid
@@ -124,12 +124,13 @@ class FuzzyGAController():
         ga.target_fitness_type = "max"
         ### ------
 
-        
-        saved_chromsome = get_prime_chromosome("best_chromosome.txt")
-        print(saved_chromsome)
-        ga.population = ga.make_population([saved_chromsome])
+        saved_approach = False
+        if saved_approach:
+            saved_chromsome = get_prime_chromosome("prime9_maybe.txt")
+            print(saved_chromsome)
+            ga.population = ga.make_population([saved_chromsome])
 
-        ga.generation_goal = 20
+        ga.generation_goal = 5
 
         ga.fitness_function_impl = self.fitness
         ga.evolve()
@@ -141,6 +142,8 @@ class FuzzyGAController():
         self.best_chromosome = ga.population[0]
 
         self.export_chromosome()
+
+        ga.graph.show()
 
 def get_prime_chromosome(filename):
 

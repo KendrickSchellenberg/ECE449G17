@@ -6,6 +6,7 @@ from src.kesslergame import Scenario, KesslerGame, GraphicsType
 # from test_controller import TestController
 from scott_dick_controller import ScottDickController
 from G17_controller_genetic_best import G17Controller
+# from G17_controller_nongenetic import G17Controller
 from graphics_both import GraphicsBoth
 
 my_test_scenario = Scenario(name='Test Scenario',

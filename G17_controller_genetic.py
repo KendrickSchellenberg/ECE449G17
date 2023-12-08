@@ -38,7 +38,7 @@ class G17Controller(KesslerController):
         self.eval_frames = 0 #What is this?
         self.chromosome = chromosome
 
-        print(chromosome)
+        #print(chromosome)
 
         self.closest_distances = []
         self.ship_approaching_list = []
