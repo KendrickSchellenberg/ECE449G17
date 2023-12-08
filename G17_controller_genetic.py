@@ -34,9 +34,11 @@ class G17Controller(KesslerController):
             index += 1
         return sublist
 
-    def __init__(self, chromosome = 10):
+    def __init__(self, chromosome = None):
         self.eval_frames = 0 #What is this?
         self.chromosome = chromosome
+
+        print(chromosome)
 
         self.closest_distances = []
         self.ship_approaching_list = []

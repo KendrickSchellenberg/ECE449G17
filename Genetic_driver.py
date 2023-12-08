@@ -5,7 +5,7 @@ import scenario_runner # temporary name for now
 import statistics
 import re
 
-from G17_controller import G17Controller
+from G17_controller_genetic import G17Controller
         
 class FuzzyGAController():
     """
@@ -57,21 +57,23 @@ class FuzzyGAController():
         # We are going to do weighted fitness functions. We can adjust the weights to specify how important a that affect of that 
         # component is on our model
         closest_distance_weight = 2 
-        accuracy_weight = 200
+        accuracy_weight = 100
+        hit_weight = 2
 
         # Penalty Weight
-        death_weight = 50        
+        death_weight = 75        
         penalty = (score.deaths * death_weight) 
 
-        # Maximize accuracy
+        # Maximize asteroids hit and accuracy
+        hit_score = (score.asteroids_hit * hit_weight)
         accuracy_score = (score.accuracy * accuracy_weight)
 
         # Minimize distance
         distance_score = (statistics.mean(ctrl.get_closest_distances()) * closest_distance_weight)
 
-        actual_score = accuracy_score - distance_score - penalty
+        actual_score = hit_score + accuracy_score - distance_score - penalty
                         
-        print(f"Actual score: {actual_score}, Accuracy: {accuracy_score}, Distance: {distance_score}, Penalty: {penalty}")
+        print(f"Actual score: {actual_score}, Hit: {hit_score},Accuracy: {accuracy_score}, Distance: {distance_score}, Penalty: {penalty}")
         return actual_score
 
     def gen_chromosome(self):
@@ -114,18 +116,20 @@ class FuzzyGAController():
         ga.gene_impl = self.gen_chromosome
 
         ga.chromosome_length = 47 # Will vary depending on how important the length is.
-        ga.population_size = 2
+        ga.population_size = 10
 
         ### The target fitness type will have to vary because we are looking 
         ## For max accuracy, distance from nearest asteroid
         ## Min death, distance moveed.
         ga.target_fitness_type = "max"
         ### ------
-        saved_chromsome = get_prime_chromosome("prime.txt")
-        print(saved_chromsome)
-        ga.make_population(saved_chromsome)
 
-        ga.generation_goal = 400
+        
+        saved_chromsome = get_prime_chromosome("best_chromosome.txt")
+        print(saved_chromsome)
+        ga.population = ga.make_population([saved_chromsome])
+
+        ga.generation_goal = 20
 
         ga.fitness_function_impl = self.fitness
         ga.evolve()
@@ -137,8 +141,6 @@ class FuzzyGAController():
         self.best_chromosome = ga.population[0]
 
         self.export_chromosome()
-        # Now what do i do with the best chromosome?
-        #### Reference Kendrick's Lab on Test Dataset Evaluation
 
 def get_prime_chromosome(filename):
 
@@ -154,6 +156,8 @@ def get_prime_chromosome(filename):
     print(float_list)
     print("This is the chromosome from the file:\n\t", (float_list), len(float_list))
 
+    chromosome = EasyGA.structure.Chromosome(float_list)
+    
     return float_list
 
 ctrl = FuzzyGAController()

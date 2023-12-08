@@ -35,7 +35,7 @@ class G17Controller(KesslerController):
             index += 1
         return sublist
 
-    def __init__(self, filename = "prime2.txt"):
+    def __init__(self, filename = "prime5.txt"):
         self.eval_frames = 0 #What is this?
 
         with open(filename, 'r') as file:

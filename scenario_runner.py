@@ -33,7 +33,7 @@ class Test():
                     {'position': (400, 400), 'angle': 90, 'lives': 3, 'team': 1},
                     ],
                     map_size=(1000, 800),
-                    time_limit=30,
+                    time_limit=60,
                     ammo_limit_multiplier=0,
                     stop_if_no_ammo=False)
         
