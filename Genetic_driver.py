@@ -3,8 +3,9 @@ import numpy as np
 import random
 import scenario_runner # temporary name for now
 import statistics
+import re
 
-from G17_controller import G17Controller
+from G17_controller_genetic import G17Controller
         
 class FuzzyGAController():
     """
@@ -56,26 +57,24 @@ class FuzzyGAController():
         # We are going to do weighted fitness functions. We can adjust the weights to specify how important a that affect of that 
         # component is on our model
         closest_distance_weight = 2 
-        accuracy_weight = 10
+        accuracy_weight = 100
+        hit_weight = 2
 
-        # Penalty Weights
-        death_weight = 50
-        completion_speed_weight = 1/2
-        
-        # 450 is I think the max distance?
-        desired_score = 100 * accuracy_weight + 450 * closest_distance_weight
-        
-        penalty = (score.deaths * death_weight) + (score.mean_eval_time * completion_speed_weight)
+        # Penalty Weight
+        death_weight = 75        
+        penalty = (score.deaths * death_weight) 
 
+        # Maximize asteroids hit and accuracy
+        hit_score = (score.asteroids_hit * hit_weight)
         accuracy_score = (score.accuracy * accuracy_weight)
+
+        # Minimize distance
         distance_score = (statistics.mean(ctrl.get_closest_distances()) * closest_distance_weight)
 
-        actual_score = accuracy_score + distance_score - penalty
+        actual_score = hit_score + accuracy_score - distance_score - penalty
                         
-        error = abs(desired_score - actual_score)
-        print(f"Actual score: {actual_score}, Accuracy: {accuracy_score}, Distance: {distance_score}, Penalty: {penalty}")
-        print(f"Error: {error}, Desired score: {desired_score}")
-        return error
+        print(f"Actual score: {actual_score}, Hit: {hit_score},Accuracy: {accuracy_score}, Distance: {distance_score}, Penalty: {penalty}")
+        return actual_score
 
     def gen_chromosome(self):
         """
@@ -88,64 +87,26 @@ class FuzzyGAController():
         ```````
         """
         variable_value = random.uniform(0, 1)
-        # print("\tThis is the value that is generated", variable_value)
         return variable_value
 
-    def export_chromosome(self, print):
+    def export_chromosome(self):
         """
         Returns the best developed chromosome.
         """
+
+        # Assuming self.best_chromosome.gene_value_list contains floats
+        float_list = self.best_chromosome.gene_value_list
+
+        # Convert float values to strings
+        str_list = [str(value) for value in float_list]
+
+        # Join the string values with a separator (e.g., ', ')
+        result_string = ', '.join(str_list)
+
         print("Writing to file the best result")
         with open("best_chromosome.txt", "w") as file:
-            file.write(print)
-        return self.best_chromosome
+            file.write(result_string)
     
-    def open_run(self, filename):
-        import re
-        # ga = EasyGA()
-        from EasyGA.structure import Chromosome as ga
-        with open(filename, 'r') as file:
-            chromosome = file.read()
-            # chromosome = chromosome.astype(float)
-            # print(type(chromosome))
-        # Extract numbers using regular expression
-        numbers = re.findall(r'\d+\.\d+', chromosome)
-
-        # Convert the list of strings to a list of floats
-        float_list = [float(num) for num in numbers]
-        print(float_list)
-        print("This is the chromosome from the file:\n\t", ga(float_list), len(float_list))
-        chromosome = float_list
-        g17_controller = G17Controller(float_list)
-        
-        test = scenario_runner.Test(g17_controller)
-        score = test.get_score()
-        ctrl = test.get_ctrl()
-
-        # We are going to do weighted fitness functions. We can adjust the weights to specify how important a that affect of that 
-        # component is on our model
-        closest_distance_weight = 2 
-        accuracy_weight = 10
-
-        # Penalty Weights
-        death_weight = 50
-        completion_speed_weight = 1/2
-        
-        # 450 is I think the max distance?
-        desired_score = 100 * accuracy_weight + 450 * closest_distance_weight
-        
-        penalty = (score.deaths * death_weight) + (score.mean_eval_time * completion_speed_weight)
-
-        accuracy_score = (score.accuracy * accuracy_weight)
-        distance_score = (statistics.mean(ctrl.get_closest_distances()) * closest_distance_weight)
-
-        actual_score = accuracy_score + distance_score - penalty
-                        
-        error = abs(desired_score - actual_score)
-        print(f"Actual score: {actual_score}, Accuracy: {accuracy_score}, Distance: {distance_score}, Penalty: {penalty}")
-        print(f"Error: {error}, Desired score: {desired_score}")
-
-        # self.fitness(ga(float_list))
 
     def run(self):
         """
@@ -153,24 +114,51 @@ class FuzzyGAController():
         """
         ga = EasyGA.GA()
         ga.gene_impl = self.gen_chromosome
-        # ga.chromosome_impl = self.gen_chromosome
+
         ga.chromosome_length = 47 # Will vary depending on how important the length is.
-        ga.population_size = 1
+        ga.population_size = 10
 
         ### The target fitness type will have to vary because we are looking 
         ## For max accuracy, distance from nearest asteroid
         ## Min death, distance moveed.
-        ga.target_fitness_type = "min"
+        ga.target_fitness_type = "max"
         ### ------
 
-        ga.generation_goal = 5
+        
+        saved_chromsome = get_prime_chromosome("best_chromosome.txt")
+        print(saved_chromsome)
+        ga.population = ga.make_population([saved_chromsome])
+
+        ga.generation_goal = 20
+
         ga.fitness_function_impl = self.fitness
         ga.evolve()
+
+        ga.graph.highest_value_chromosome()
+
         ga.print_best_chromosome()
-        self.best_chromosome = ga.print_best_chromosome()
+
+        self.best_chromosome = ga.population[0]
+
         self.export_chromosome()
-        # Now what do i do with the best chromosome?
-        #### Reference Kendrick's Lab on Test Dataset Evaluation
+
+def get_prime_chromosome(filename):
+
+    with open(filename, 'r') as file:
+        raw_chromosome = file.read()
+        # chromosome = chromosome.astype(float)
+        # print(type(chromosome))
+    # Extract numbers using regular expression
+    numbers = re.findall(r'\d+\.\d+', raw_chromosome)
+
+    # Convert the list of strings to a list of floats
+    float_list = [float(num) for num in numbers]
+    print(float_list)
+    print("This is the chromosome from the file:\n\t", (float_list), len(float_list))
+
+    chromosome = EasyGA.structure.Chromosome(float_list)
+    
+    return float_list
 
 ctrl = FuzzyGAController()
 ctrl.run()

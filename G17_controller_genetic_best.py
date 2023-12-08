@@ -15,10 +15,11 @@ from skfuzzy import control as ctrl
 import math
 import numpy as np
 import matplotlib as plt
+import re
 
 class G17Controller(KesslerController):
     def scale_min_max(self, min, max, rng):
-        cv = self.chromosome.gene_value_list
+        cv = self.chromosome
         sublist = cv[rng[0] : rng[1]]
 
         # Sorted in ascending order
@@ -34,8 +35,22 @@ class G17Controller(KesslerController):
             index += 1
         return sublist
 
-    def __init__(self, chromosome = 10):
+    def __init__(self, filename = "prime5.txt"):
         self.eval_frames = 0 #What is this?
+
+        with open(filename, 'r') as file:
+            raw_chromosome = file.read()
+            # chromosome = chromosome.astype(float)
+            # print(type(chromosome))
+        # Extract numbers using regular expression
+        numbers = re.findall(r'\d+\.\d+', raw_chromosome)
+
+        # Convert the list of strings to a list of floats
+        float_list = [float(num) for num in numbers]
+        print(float_list)
+        print("This is the chromosome from the file:\n\t", (float_list), len(float_list))
+        chromosome = float_list
+
         self.chromosome = chromosome
 
         self.closest_distances = []
