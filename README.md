@@ -13,7 +13,7 @@ It requires three files
 Running Genetic_driver.py will begin a fresh optimization with both a population and generation of 5. The best chromosome will be saved to best_chromosome.txt, but it is outputted to terminal as well in addition to a graph showing fitness over time being be shown.
 
 
-We ran this optimization over populations of 20 for thousands of generations. The best chromosomes were fed back into the optimizer by setting the hard-coded "saved_approach = False" to True, and by setting the hard-coded file path "saved_chromsome = get_prime_chromosome("prime9_maybe.txt")" as well.
+We ran this optimization over populations of 20 for thousands of generations. The best chromosomes were fed back into the optimizer by setting the hard-coded "saved_approach = False" to True, and by setting the hard-coded file path "saved_chromsome = get_prime_chromosome("prime10.txt")" as well.
 
 
 ---
