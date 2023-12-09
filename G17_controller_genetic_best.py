@@ -35,13 +35,11 @@ class G17Controller(KesslerController):
             index += 1
         return sublist
 
-    def __init__(self, filename = "prime10.txt"):
+    def __init__(self, filename = "test_chromosome.txt"):
         self.eval_frames = 0 #What is this?
 
         with open(filename, 'r') as file:
             raw_chromosome = file.read()
-            # chromosome = chromosome.astype(float)
-            # print(type(chromosome))
         # Extract numbers using regular expression
         numbers = re.findall(r'\d+\.\d+', raw_chromosome)
 

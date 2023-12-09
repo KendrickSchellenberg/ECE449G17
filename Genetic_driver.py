@@ -34,43 +34,40 @@ class FuzzyGAController():
         Genetic Algorithm model.
 
         Scoring Criteria:
+        Asteroids hit = max
         Accuracy = 100
         Death = 0
-        Closest_Distance = square function?
-        Speed_of_completion = we could use like a square root function? - min
+        Closest_Distance = average of all distances
         Parameters
         ``````````
         chromosome (Gene) : 
 
         Returns
         ```````
-        error (int) : Total error of the geenrated fuzzy GA controller model.
+        actual_score (int) : Total fitness of the generated fuzzy GA controller model.
         """
-        error = 0
-        # target_control, ship_control = self.setup_fuzzy_system(chromosome) # Could just also be done by Controller_Maker
         g17_controller = G17Controller(chromosome)
 
         test = scenario_runner.Test(g17_controller)
         score = test.get_score()
         ctrl = test.get_ctrl()
 
-        # We are going to do weighted fitness functions. We can adjust the weights to specify how important a that affect of that 
-        # component is on our model
-        closest_distance_weight = 2 
-        accuracy_weight = 100
-        hit_weight = 2
-
+        ## Weighted fitness functions. Adjust the weights to specify how important the effect of that component is on our model
         # Penalty Weight
         death_weight = 75        
         penalty = (score.deaths * death_weight) 
 
         # Maximize asteroids hit and accuracy
+        accuracy_weight = 100
+        hit_weight = 2
         hit_score = (score.asteroids_hit * hit_weight)
         accuracy_score = (score.accuracy * accuracy_weight)
 
         # Minimize distance
+        closest_distance_weight = 2 
         distance_score = (statistics.mean(ctrl.get_closest_distances()) * closest_distance_weight)
 
+        # Fitness calculation
         actual_score = hit_score + accuracy_score - distance_score - penalty
                         
         print(f"Actual score: {actual_score}, Hit: {hit_score},Accuracy: {accuracy_score}, Distance: {distance_score}, Penalty: {penalty}")
@@ -104,7 +101,7 @@ class FuzzyGAController():
         result_string = ', '.join(str_list)
 
         print("Writing to file the best result")
-        with open("best_chromosome.txt", "w") as file:
+        with open("train_chromosome.txt", "w") as file:
             file.write(result_string)
     
 
@@ -115,52 +112,49 @@ class FuzzyGAController():
         ga = EasyGA.GA()
         ga.gene_impl = self.gen_chromosome
 
-        ga.chromosome_length = 47 # Will vary depending on how important the length is.
+        ga.chromosome_length = 47 # 47 genes as per membership functions
         ga.population_size = 5
 
-        ### The target fitness type will have to vary because we are looking 
-        ## For max accuracy, distance from nearest asteroid
-        ## Min death, distance moveed.
+        """
+        The target fitness type is set to max because we are looking 
+        For max accuracy and asteroid count, less a death and asteroid nearness
+        """
         ga.target_fitness_type = "max"
-        ### ------
 
+        # Used to prepopulate 1st generation with more ideal parameters from past runs
         saved_approach = False
         if saved_approach:
-            saved_chromsome = get_prime_chromosome("prime9_maybe.txt")
-            print(saved_chromsome)
+            saved_chromsome = get_prime_chromosome("train_chromosome.txt")
             ga.population = ga.make_population([saved_chromsome])
 
         ga.generation_goal = 5
-
         ga.fitness_function_impl = self.fitness
+
+        # Run through generations
         ga.evolve()
 
+        # Save best chromosome
         ga.graph.highest_value_chromosome()
-
         ga.print_best_chromosome()
 
         self.best_chromosome = ga.population[0]
 
         self.export_chromosome()
 
+        # Show fitness increase
         ga.graph.show()
 
 def get_prime_chromosome(filename):
-
     with open(filename, 'r') as file:
         raw_chromosome = file.read()
-        # chromosome = chromosome.astype(float)
-        # print(type(chromosome))
+
     # Extract numbers using regular expression
     numbers = re.findall(r'\d+\.\d+', raw_chromosome)
 
     # Convert the list of strings to a list of floats
     float_list = [float(num) for num in numbers]
-    print(float_list)
-    print("This is the chromosome from the file:\n\t", (float_list), len(float_list))
 
-    chromosome = EasyGA.structure.Chromosome(float_list)
-    
+    print("This is the chromosome from the file:\n\t", (float_list), len(float_list))    
     return float_list
 
 ctrl = FuzzyGAController()
