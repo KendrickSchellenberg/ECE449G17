@@ -2,7 +2,6 @@
 # Nasreddine Adib Marwan
 # Datuin Raymart Cabural
 
-
 # Demonstration of a fuzzy tree-based controller for Kessler Game.
 # Please see the Kessler Game Development Guide by Dr. Scott Dick for a
 #   detailed discussion of this source code.
@@ -14,10 +13,12 @@ import skfuzzy as fuzz
 from skfuzzy import control as ctrl
 import math
 import numpy as np
-import matplotlib as plt
 
 class G17Controller(KesslerController):
     def scale_min_max(self, min, max, rng):
+        """
+        Used to set chromosome values to scaled universe bounds
+        """
         cv = self.chromosome.gene_value_list
         sublist = cv[rng[0] : rng[1]]
 
@@ -38,7 +39,7 @@ class G17Controller(KesslerController):
         self.eval_frames = 0 #What is this?
         self.chromosome = chromosome
 
-        print(chromosome)
+        #print(chromosome)
 
         self.closest_distances = []
         self.ship_approaching_list = []
@@ -64,6 +65,12 @@ class G17Controller(KesslerController):
         ship_turn = ctrl.Consequent(np.arange(-180,180,1), 'ship_turn') # Degrees due to Kessler
         ship_fire = ctrl.Consequent(np.arange(-1,1,0.1), 'ship_fire') 
 
+        """
+        General approach to gene assignment to fuzzy logic was to leave absolute bounds alone
+        Groups of three usually have a single sorted list to ensure a<=b<=c for membership
+        Groups of five usually use two lists, one for membership function 1 3 5, and other for 2 4
+            This allows better domain overlap for trimf
+        """
         bullet_time['S'] = fuzz.trimf(bullet_time.universe, [0, bullet_time_vals[0], bullet_time_vals[1]])
         bullet_time['M'] = fuzz.trimf(bullet_time.universe, [bullet_time_vals[1],bullet_time_vals[2],bullet_time_vals[3]])
         bullet_time['L'] = fuzz.trimf(bullet_time.universe, [bullet_time_vals[3], bullet_time_vals[4], 1.0])
@@ -113,8 +120,6 @@ class G17Controller(KesslerController):
         # theta_delta_fire.view()
         # ship_turn.view()
         # ship_fire.view()
-     
-     
         
         # Declare the fuzzy controller, add the rules 
         # This is an instance variable, and thus available for other methods in the same object. See notes.                         
@@ -143,7 +148,6 @@ class G17Controller(KesslerController):
         # Map size of 1000, so small from 0-200, medium from 200-400, large > 400
         # Declare fuzzy sets for the ship_thrust consequent; this will be returned
 
-        
         # Declare variables
         closest_asteroid_distance = ctrl.Antecedent(np.arange(0, 1000, 1), 'closest_asteroid_distance')
         ship_speed = ctrl.Antecedent(np.arange(0, 240, 1), 'ship_speed')
@@ -183,7 +187,12 @@ class G17Controller(KesslerController):
         ship_thrust['PS'] = fuzz.trimf(ship_thrust.universe, [ship_thrust_values_small[1],ship_thrust_values_small[2], 480])
         ship_thrust['PL'] = fuzz.trimf(ship_thrust.universe, [ship_thrust_values[3],ship_thrust_values[4],480])
 
-        #Declare each fuzzy rule
+        # Declare each fuzzy rule
+        """
+        In general, we positive thrust (move forward) when far away from asteroids in order to increase accuracy, 
+        and we negative thrust (move backwards) when in danger. No need to accelerate if going fast, but 
+        determining ship orientation is key to know whether positive or negative thrust is necessary
+        """
         rule16 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['NL'], (ship_thrust['Z']))
         rule17 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['NS'], (ship_thrust['Z']))
         rule18 = ctrl.Rule(closest_asteroid_distance['L'] & ship_speed['L'] & theta_delta_turn['Z'], (ship_thrust['Z']))

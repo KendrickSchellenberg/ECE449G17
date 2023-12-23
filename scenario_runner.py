@@ -1,5 +1,5 @@
 import time
-from src.kesslergame import Scenario, KesslerGame, GraphicsType, TrainerEnvironment
+from kesslergame import Scenario, KesslerGame, GraphicsType, TrainerEnvironment
 
 class Test():
     """
@@ -66,10 +66,10 @@ class Test():
     def get_score(self):
         return self.__score.teams[0]
     
-    def print_graph(self):
-        import matplotlib.pyplot as plt
-        plt.hist(self.ctrl.get_closest_distances(), bins=20, edgecolor='black')
-        plt.title('Distribution of Closest Asteroid Distances')
-        plt.xlabel('Distance')
-        plt.ylabel('Frequency')
-        plt.show()
+    # def print_graph(self):
+    #     import matplotlib.pyplot as plt
+    #     plt.hist(self.ctrl.get_closest_distances(), bins=20, edgecolor='black')
+    #     plt.title('Distribution of Closest Asteroid Distances')
+    #     plt.xlabel('Distance')
+    #     plt.ylabel('Frequency')
+    #     plt.show()
